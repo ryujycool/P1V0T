@@ -1,0 +1,51 @@
+1-editar a true ip forwarding:
+sysctl -w net.inet.ip.forwarding=1
+
+2- Editar /etc/rc.conf y añadir linea de activar el forwarding con gateway enable:
+
+### rc.conf
+# WAN connection o red objetivo
+ifconfig_xl0="inet 10.0.0.5 netmask 255.255.255.0"
+#  If you are using dhcp for WAN connection use ifconfig_xl0="dhcp"
+
+# LAN connection o red interna de la redbox
+ifconfig_xl1="inet 192.168.0.50 netmask 255.255.255.0"
+
+# Default gateway
+defaultrouter="10.0.0.1" # Set the gateway
+
+# Enable ip forward
+gateway_enable="YES"
+
+# Hostname
+hostname="freebsd.my.domain"
+### end rc.conf
+
+SI QUEREMOS USAR NAT:
+
+3.- añadir al rc.conf ipnat:
+
+### rc.conf
+# WAN connection o red objetivo
+ifconfig_xl0="inet 10.0.0.5 netmask 255.255.255.0"
+#  If you are using dhcp for WAN connection use ifconfig_xl0="dhcp"
+
+# LAN connection o red interna de la redbox
+ifconfig_xl1="inet 192.168.0.50 netmask 255.255.255.0"
+
+# Default gateway
+defaultrouter="10.0.0.1" # Set the gateway
+
+# Enable ip forward
+gateway_enable="YES"
+
+# Enable ip nat
+ipnat_enable=”YES”
+
+# Hostname
+hostname="freebsd.my.domain"
+### end rc.conf
+
+4.- Como guia del comando rdr:
+
+rdr [INTERFAZ_ENTRADA] [IP_ORIGEN/(32 FOR PUBLICA / 16 FOR PRIVADA)] port [PORT] -> [IP_MAQUINA_OBJETIVO] port [PORT]
