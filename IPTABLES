@@ -32,6 +32,13 @@ iptables -A FORWARD -i eth1 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCE
 permitimos las conexiones que se establezcan entre la red origen y objetivo:
 iptables -A FORWARD -i eth0 -o eth1 -j ACCEPT
 
--------------------------------------------------------------------------------------------------------------------------------------------
+OPCION 3
+activar ip_forward:
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
+Actimos la conexion entre la red origen y la interfaz de salida que es la red objetivo:
+iptables -t nat -A POSTROUTING -s [red_origen/netmask] -o eth0 -j MASQUERADE
+ 
+---------------------------------------------------------------------------------------------------------------------------------------
 IMPORTANTE AÑADIR RUTAS PARA LAS DIFERENTES REDES EN LA MAQUINA REDBOX:
 route add -net [IP/NETMASK] gw [IP_INTERFAZ_ROUTER]
