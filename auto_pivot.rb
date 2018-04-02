@@ -51,7 +51,9 @@ class MetasploitModule < Msf::Post
 		  	#
 		end
 	end
-
+	#
+  	# funcion principal, donde se invocan las otras segun plataforma
+  	#
 	def run
 		if systeminfo == TRUE
 		print_good("OS: #{session.sys.config.sysinfo['OS']}")
