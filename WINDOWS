@@ -1,0 +1,13 @@
+WINDOWS 7 x32(PRO,)/x64(PRO)
+WINDOWS XP x32
+WINDOWS 10 x64(PRO,)
+
+CLAVE A MODIFICAR:
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\ Services\Tcpip\Parameters\IPEnableRouter -->1
+SERVICIO A HABILITAR:
+ESPAÑOL=SERVICIO Y ACCESO REMOTO
+INGLES= ROUTING AND REMOTE ACCESS
+habilitar servicio e iniciar
+
+COMANDOS:
+reg add "HKLM\SYSTEM\CurrentControlSet\services\Tcpip\Parameters" /f /v IPEnableRouter /t REG_DWORD /d 1
