@@ -39,7 +39,7 @@ class MetasploitModule < Msf::Post
 	#
   	# acciones segun eleccion plataforma
   	#
-	def os_set_wallpaper(file)
+	def set_pivot()
 		case session.platform
 	  	when 'linux'
 			#
