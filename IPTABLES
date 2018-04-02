@@ -3,6 +3,7 @@ USANDO NAT:
 INTERFAZ PUBLICA O RED DESTINO: ETH1
 INTERFAZ PRIVADA O ORIGEN REDBOX: ETH0
 
+
 OPCION1:
 activar ip_forward:
 echo 1 > /proc/sys/net/ipv4/ip_forward
@@ -42,3 +43,6 @@ iptables -t nat -A POSTROUTING -s [red_origen/netmask] -o eth0 -j MASQUERADE
 ---------------------------------------------------------------------------------------------------------------------------------------
 IMPORTANTE AÑADIR RUTAS PARA LAS DIFERENTES REDES EN LA MAQUINA REDBOX:
 route add -net [IP/NETMASK] gw [IP_INTERFAZ_ROUTER]
+
+ALTERNATIVA A USAR EL echo EN IP_FORWARD:
+sysctl -w net.ipv4.ip.forward=1
