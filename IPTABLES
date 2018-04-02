@@ -1,0 +1,33 @@
+
+USANDO NAT:
+INTERFAZ PUBLICA O RED DESTINO: ETH1
+INTERFAZ PRIVADA O ORIGEN REDBOX: ETH0
+
+OPCION1:
+activar ip_forward:
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
+activar nat en la interface de salida:
+iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
+
+permitir trafico entrante desde la red redbox:
+iptables -A INPUT -i eth0 -j ACCEPT
+
+permitir las conexiones retorno establecidas desde la interfaz de la red objetivo/destino:
+iptables -A INPUT -i eth1 -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+permitir conexiones salientes
+iptables -A OUTPUT -j ACCEPT
+
+OPCION 2
+activar ip_forward:
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
+Activamos nat en interface salida:
+iptables -t nat -A POSTROUTING -o eth1 -j MASQUERADE
+
+aceptamos las conexiones de la red objetivo que estan establecidas:
+iptables -A FORWARD -i eth1 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+
+permitimos las conexiones que se establezcan entre la red origen y objetivo:
+iptables -A FORWARD -i eth0 -o eth1 -j ACCEPT
