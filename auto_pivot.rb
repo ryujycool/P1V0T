@@ -26,18 +26,28 @@ class MetasploitModule < Msf::Post
       [
 		# OptBool.new( 'SYSTEMINFO', [ true, 'True if you want to get system info', 'TRUE' ])
 		OptString.new('NET',    [true, 'Red que pretendemos alcanzar (Ej: 10.0.0.0/24)']),
-		OptString.new('RHOST',    [true, 'IP de la maquina PIVOT (nuestra red)']),
-		OptString.new('LOS',    [true, 'Sistema Operativo local (linux o windows)'])
+		OptString.new('RHOST',    [true, 'IP de la maquina PIVOT (nuestra red)'])
       ])
   end
+	#Obtenemos el OS de instalacion de metasploit
+	def sistema_base?
+		if (Msf::Config.local_directory[0,1])==("/")
+			return "linux"
+			print_good("soy linux")
+		elsif ((Msf::Config.local_directory[0,1])=~ /[[:alpha:]]/)
+			return "windows"
+		else
+			return "unknown"
+		end
+	end
 	#
-  	# linux
+  	# comandos para linux
   	#
 	def linux_pivot()
 
 	end
 	#
-  	# windows
+  	# comandos para windows
   	#
 	def windows_pivot()
 		print_status("Enabling IP Router...")
@@ -53,37 +63,35 @@ class MetasploitModule < Msf::Post
 	def set_pivot()
 		case session.platform
 	  	when 'linux'
-			#
 		  	# codigo para linux
-		  	#
 		  	linux_pivot()
 		when 'windows'
-			#
 		  	# codigo para windows
-		  	#
 			windows_pivot()
 		end
 	end
 	
 	def create_route()
-	#
 	# Crea la ruta en la máquina local
-	#
-		case datastore['LOS']
+	# Obtenemos sistema local:
+		print_status("Add ruta al la red objetivo...")
+		case sistema_base?
 	  	when 'linux'
-			#
-		  	# codigo para linux
-		  	#
-		  	print_status("Routing the new network...")
 		  	if system("route add -net #{datastore['NET']} gw #{datastore['RHOST']}")
-				print_good("Route added.")
+				print_good("Ruta local instalada")
 			else
-				print_bad("Route failed.")
+				print_bad("Algo fallo al instalar la ruta local.")
 			end
 		when 'windows'
 			#
-		  	# codigo para windows
+		  	# codigo para windows pendiente implementar la conversion del cidr
+			#route -p add <red> mask <mascara> <gw> METRIC 1
 		  	#
+		  	#if system("route -p add #{datastore['NET']} #{datastore['RHOST']} METRIC 1")
+			#	print_good("Ruta instalada")
+			#else
+			#	print_bad("Algo fallo al instalar la ruta.")
+			#end
 		end
 	end
 	
