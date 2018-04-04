@@ -71,6 +71,11 @@ class MetasploitModule < Msf::Post
 		end
 	end
 	
+	#conversion cidr a netmask
+	def cidr_to_netmask(cidr)
+	  IPAddr.new('255.255.255.255').mask(cidr).to_s
+	end
+	
 	def create_route()
 	# Crea la ruta en la máquina local
 	# Obtenemos sistema local:
@@ -83,15 +88,14 @@ class MetasploitModule < Msf::Post
 				print_bad("Algo fallo al instalar la ruta local.")
 			end
 		when 'windows'
-			#
-		  	# codigo para windows pendiente implementar la conversion del cidr
-			#route -p add <red> mask <mascara> <gw> METRIC 1
-		  	#
-		  	#if system("route -p add #{datastore['NET']} #{datastore['RHOST']} METRIC 1")
-			#	print_good("Ruta instalada")
-			#else
-			#	print_bad("Algo fallo al instalar la ruta.")
-			#end
+		  	# codigo para windows conversion con variables de cidr a netmask y extraccion de red
+			network = datastore['NET'].split("/").first
+			netmask = cidr_to_netmask(datastore['NET'].split("/").last)
+		  	if system("route -p add #{network} mask #{netmask} METRIC 1")
+				print_good("Ruta instalada")
+			else
+				print_bad("Algo fallo al instalar la ruta.")
+			end
 		end
 	end
 	
