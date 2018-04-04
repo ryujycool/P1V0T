@@ -1,16 +1,22 @@
+DOS O MAS TARJETAS DE RED (SE EXCLUYEN VPN's):
+
 WINDOWS 7 x32(PRO,)/x64(PRO)
 WINDOWS XP x32
 WINDOWS 10 x64(PRO,)
+WINDOWS 2003 x32 (STANDARD,)
 
 CLAVE A MODIFICAR:
 HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\ Services\Tcpip\Parameters\IPEnableRouter -->1
 SERVICIO A HABILITAR:
-ESPAÑOL=SERVICIO Y ACCESO REMOTO
+ESPAÑOL=ENRUTAMIENTO Y ACCESO REMOTO
 INGLES= ROUTING AND REMOTE ACCESS
 habilitar servicio e iniciar
 
-COMANDOS:
+COMANDOS EN PIVOT:
 reg add "HKLM\SYSTEM\CurrentControlSet\services\Tcpip\Parameters" /f /v IPEnableRouter /t REG_DWORD /d 1
+sc config RemoteAccess start= auto [disable, demand, auto]
+net start RemoteAccess / net stop RemoteAccess
+------------------------------
+Con estos comandos me daba error de que no se pudo iniciar el servicio por estar deshabilitado:
 reg add "HKLM\SYSTEM\CurrentControlSet\services\RemoteAccess" /v Start /t REG_DWORD /d 2 /f [4 disabled, 2 automatic, 3 manual]
 reg add "HKLM\SYSTEM\CurrentControlSet\services\RemoteAccess" /v DelayedAutostart /t REG_DWORD /d 0 /f [1 enabled,0 disabled/interesa en 0]
-net start RemoteAccess / net stop RemoteAccess
