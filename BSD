@@ -22,7 +22,7 @@ hostname="freebsd.my.domain"
 ### end rc.conf
 
 SI QUEREMOS USAR NAT:
-
++++++++++++++++++++++++++++PENDIENTE DE IMPLEMENTAR CORRECTAMENTE Y BUSCAR UNA MANERA LIMPIA++++++++++++++++++++++++++++++++
 3.- añadir al rc.conf ipnat:
 
 ### rc.conf
