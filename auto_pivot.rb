@@ -40,11 +40,11 @@ class MetasploitModule < Msf::Post
   	# windows
   	#
 	def windows_pivot()
-		print_line("Enabling IP Router...")
+		print_status("Enabling IP Router...")
 		print_good(cmd_exec("reg add \"HKLM\\SYSTEM\\CurrentControlSet\\services\\Tcpip\\Parameters\" /f /v IPEnableRouter /t REG_DWORD /d 1"))
-		print_line("Enabling Routing and Remote Access service...")
+		print_status("Enabling Routing and Remote Access service...")
 		print_good(cmd_exec("sc config RemoteAccess start= auto"))
-		print_line("Starting Routing and Remote Access service...")
+		print_status("Starting Routing and Remote Access service...")
 		print_good(cmd_exec("net start RemoteAccess"))
 	end
 	#
@@ -74,7 +74,7 @@ class MetasploitModule < Msf::Post
 			#
 		  	# codigo para linux
 		  	#
-		  	print_line("Routing the new network...")
+		  	print_status("Routing the new network...")
 		  	if system("route add -net #{datastore['NET']} gw #{datastore['RHOST']}")
 				print_good("Route added.")
 			else
@@ -91,10 +91,14 @@ class MetasploitModule < Msf::Post
   	# funcion principal, donde se invocan las otras segun plataforma
   	#
 	def run
-
-		print_good("OS: #{session.sys.config.sysinfo['OS']}")
-		print_good("Computer name: #{'Computer'} ")
-		print_good("Current user: #{session.sys.config.getuid}")
+		# rra_status = --> Estado inicial del servicio RRA
+		# iprouting_status = --> Valor inicial del registro IPEnableRouter
+		# print_status("Initial values:")
+		# print_line("	El servicio RRA se encuentra #{rra_status}")
+		# print_line("	El valor de IPEnableRouter es #{iprouting_status}")
+		print_status("OS: #{session.sys.config.sysinfo['OS']}")
+		print_status("Computer name: #{'Computer'} ")
+		print_status("Current user: #{session.sys.config.getuid}")
 		set_pivot()
 		create_route()
   end
