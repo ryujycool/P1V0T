@@ -72,7 +72,7 @@ class MetasploitModule < Msf::Post
 			windows_pivot()
 		end
 	end
-	def initialize_dicitionary(netmasks)
+	def initialize_dicitionary()
 		dic = {}
 		dic['4'] = "240.0.0.0"
 		dic['5'] = "248.0.0.0"
@@ -109,7 +109,7 @@ class MetasploitModule < Msf::Post
 	def cidr_to_netmask(cidr)
 	  # IPAddr.new('255.255.255.255').mask(cidr).to_s
 	  netmask = [4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,32]
-	  d_netmarsks = initialize_dicitionary(netmask)
+	  d_netmarsks = initialize_dicitionary()
 	  if netmask.include? cidr
 		return d_netmarsks[cidr]
 	  else
