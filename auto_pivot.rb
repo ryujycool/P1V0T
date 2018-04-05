@@ -25,8 +25,8 @@ class MetasploitModule < Msf::Post
     register_options(
       [
 		# OptBool.new( 'SYSTEMINFO', [ true, 'True if you want to get system info', 'TRUE' ])
-		OptString.new('NET',    [true, 'The network we want to arrive (Example: 10.0.0.0/24)']),
-		OptString.new('RHOST',    [true, 'IP address of pivot computer (our side IP)'])
+		OptAddressRange.new('NET',    [true, 'The network we want to arrive (Example: 10.0.0.0/24)']),
+		OptAddress.new('RHOST',    [true, 'IP address of pivot computer (our side IP)'])
       ])
   end
 	#Obtenemos el OS de instalacion de metasploit
@@ -74,8 +74,36 @@ class MetasploitModule < Msf::Post
 	end
 	
 	#conversion cidr a netmask
-	def cidr_to_netmask(cidr)
-	  IPAddr.new('255.255.255.255').mask(cidr).to_s
+	def get_netmask(eval_net)
+		cidr= eval_net.split("/").last
+		return IPAddr.new('255.255.255.255').mask(cidr).to_s
+	end
+	#check de rnet si cumple formato ip/cidr debe de ser comprobado por OptAddressRange
+	def check_rnet()
+		if get_cidr(datastore['NET']) == false
+			print_bad("cidr en blanco")
+			return false
+		elsif not((0..33).include?(get_cidr(datastore['NET'])))
+			print_bad("cidr fuera de rango")
+			return false
+		elsif not(Rex::Socket.is_ipv4?(get_net(datastore['NET'])))
+			print_bad("no es ipv4")
+			return false
+		else
+			return true
+		end
+	end
+	#funcion obtener red
+	def get_net(eval_net)
+		return eval_net.split("/").first
+	end
+	#funcion obtener cidr devuelve un integer con el cidr especificado y si no esta devuelve false
+	def get_cidr(eval_net)
+		if eval_net.include? "/"
+			return eval_net.split("/").last.to_i
+		else
+			return false
+		end
 	end
 	
 	# Crea la ruta en la máquina local
@@ -91,12 +119,10 @@ class MetasploitModule < Msf::Post
 			end
 		when 'windows'
 		  	# codigo para windows conversion con variables de cidr a netmask y extraccion de red
-			network = datastore['NET'].split("/").first
-			netmask = cidr_to_netmask(datastore['NET'].split("/").last)
-		  	if system("route -p add #{network} mask #{netmask} METRIC 1")
+			if system("route -p add #{get_net(datastore['NET'])} mask #{get_netmask(datastore['NET'])} METRIC 1")
 				print_good("Route added.")
 			else
-				print_bad("Something was wrong adding local route. Try to add it manually.")
+				print_bad("Something was wrong adding local route. Try to add it manually")
 			end
 		end
 	end
@@ -105,6 +131,7 @@ class MetasploitModule < Msf::Post
   	# funcion principal, donde se invocan los comandos necesarios segun la plataforma
   	#
 	def run
+		if check_rnet()
 		# rra_status = --> Estado inicial del servicio RRA
 		# iprouting_status = --> Valor inicial del registro IPEnableRouter
 		# print_status("Initial values:")
@@ -115,5 +142,12 @@ class MetasploitModule < Msf::Post
 		print_status("Current user: #{session.sys.config.getuid}")
 		set_pivot()
 		create_route()
-  end
+		#para saber si las rutas son correctas
+		print_status("windows: route -p add #{get_net(datastore['NET'])} mask #{get_netmask(datastore['NET'])} METRIC 1")
+  		print_status("linux: route add -net #{datastore['NET']} gw #{datastore['RHOST']}")
+		else
+			print_bad("Aborting Module.")
+		end
+			
+  	end
 end
