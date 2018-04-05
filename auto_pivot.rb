@@ -109,9 +109,9 @@ class MetasploitModule < Msf::Post
 	def cidr_to_netmask(cidr)
 	  # IPAddr.new('255.255.255.255').mask(cidr).to_s
 	  netmask = [4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,32]
-	  d_netmarsks = initialize_dicitionary()
+	  d_netmasks = initialize_dicitionary()
 	  if netmask.include? cidr
-		return d_netmarsks[cidr]
+		return d_netmasks[cidr]
 	  else
 		return "Invalid netmask."
 	  end
