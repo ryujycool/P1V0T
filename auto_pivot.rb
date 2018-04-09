@@ -137,6 +137,9 @@ class MetasploitModule < Msf::Post
 		# print_status("Initial values:")
 		# print_line("	El servicio RRA se encuentra #{rra_status}")
 		# print_line("	El valor de IPEnableRouter es #{iprouting_status}")
+		# https://www.offensive-security.com/metasploit-unleashed/api-calls/
+		# Lee las interfaces de red
+		print_status(client.net.config.interfaces)
 		print_status("OS: #{session.sys.config.sysinfo['OS']}")
 		print_status("Computer name: #{'Computer'} ")
 		print_status("Current user: #{session.sys.config.getuid}")

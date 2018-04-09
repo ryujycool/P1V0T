@@ -1,0 +1,529 @@
+auxiliary/server/local_hwbridge.rb:    @can_interfaces = []
+auxiliary/server/local_hwbridge.rb:    @can_interfaces = []
+auxiliary/server/local_hwbridge.rb:        @can_interfaces << i.name
+auxiliary/server/local_hwbridge.rb:    unless @can_interfaces.empty?
+auxiliary/server/local_hwbridge.rb:    @can_interfaces.each do |can|
+auxiliary/server/local_hwbridge.rb:    @can_interfaces.each do |can|
+auxiliary/server/local_hwbridge.rb:    @can_interfaces.each do |can|
+auxiliary/server/local_hwbridge.rb:  # as sample_cmd in the interface
+auxiliary/server/icmp_exfil.rb:      OptString.new('INTERFACE',     [false, 'The name of the interface']),
+auxiliary/server/icmp_exfil.rb:      OptAddress.new('LOCALIP', [false, 'The IP address of the local interface'])
+auxiliary/server/icmp_exfil.rb:      @interface = datastore['INTERFACE'] || Pcap.lookupdev
+auxiliary/server/icmp_exfil.rb:      # this is needed on windows cause we send interface directly to Pcap functions
+auxiliary/server/icmp_exfil.rb:      @interface = get_interface_guid(@interface)
+auxiliary/server/icmp_exfil.rb:      @iface_ip ||= get_ipv4_addr(@interface) if netifaces
+auxiliary/server/icmp_exfil.rb:      print_status("\nStopping ICMP listener on #{@interface} (#{@iface_ip})")
+auxiliary/server/icmp_exfil.rb:    print_status("ICMP Listener started on #{@interface} (#{@iface_ip}). Monitoring for trigger packet containing #{datastore['START_TRIGGER']}")
+auxiliary/server/icmp_exfil.rb:            :iface   => @interface,
+auxiliary/server/icmp_exfil.rb:    # send icmp response on selected interface
+auxiliary/server/icmp_exfil.rb:    icmp_response.to_w(iface = @interface)
+auxiliary/spoof/cisco/cdp.rb:        OptString.new('PORT', [true, "The CDP 'sent through interface' value", "Port 1"]),
+auxiliary/spoof/cisco/cdp.rb:      fail ArgumentError, "Unable to get SMAC from #{interface} -- Set INTERFACE or SMAC"
+auxiliary/spoof/cisco/cdp.rb:  def interface
+auxiliary/spoof/cisco/cdp.rb:    @interface ||= datastore['INTERFACE'] || Pcap.lookupdev
+auxiliary/spoof/cisco/cdp.rb:    @smac ||= datastore['SMAC'] || get_mac(interface)
+auxiliary/spoof/cisco/cdp.rb:      print_status("Sending CDP messages on #{interface}")
+auxiliary/spoof/cisco/dtp.rb:        interface = datastore['INTERFACE'] || Pcap.lookupdev
+auxiliary/spoof/mdns/mdns_response.rb:    # addr like "::ffff:192.168.0.1" when the interface we're listening
+auxiliary/spoof/mdns/mdns_response.rb:    # The bind address here will determine which interface we receive
+auxiliary/spoof/mdns/mdns_response.rb:    # from all interfaces, so try to restrict if we can, but fall back
+auxiliary/spoof/arp/arp_poisoning.rb:      OptString.new('INTERFACE', 	[false, 'The name of the interface']),
+auxiliary/spoof/arp/arp_poisoning.rb:      OptString.new('LOCALSMAC',    	[false, 'The MAC address of the local interface to use for hosts detection, this is usefull only if you want to spoof to another host with SMAC']),
+auxiliary/spoof/arp/arp_poisoning.rb:      OptString.new('LOCALSIP',    	[false, 'The IP address of the local interface to use for hosts detection']),
+auxiliary/spoof/arp/arp_poisoning.rb:      @interface = datastore['INTERFACE'] || Pcap.lookupdev
+auxiliary/spoof/arp/arp_poisoning.rb:      # This is needed on windows cause we send interface directly to Pcap functions
+auxiliary/spoof/arp/arp_poisoning.rb:      @interface = get_interface_guid(@interface)
+auxiliary/spoof/arp/arp_poisoning.rb:      @smac ||= get_mac(@interface) if @netifaces
+auxiliary/spoof/arp/arp_poisoning.rb:      @sip ||= get_ipv4_addr(@interface) if @netifaces
+auxiliary/spoof/arp/arp_poisoning.rb:        listener_capture = ::Pcap.open_live(@interface, 68, true, 0)
+auxiliary/spoof/nbns/nbns_response.rb:          This module must be run as root and will bind to udp/137 on all interfaces.
+auxiliary/spoof/nbns/nbns_response.rb:    # addr like "::ffff:192.168.0.1" when the interface we're listening
+auxiliary/spoof/llmnr/llmnr_response.rb:    # addr like "::ffff:192.168.0.1" when the interface we're listening
+auxiliary/spoof/llmnr/llmnr_response.rb:    # The bind address here will determine which interface we receive
+auxiliary/spoof/llmnr/llmnr_response.rb:    # from all interfaces, so try to restrict if we can, but fall back
+auxiliary/bnat/bnat_scan.rb:          OptString.new('INTERFACE', [true, "The name of the interface", "eth0"]),
+auxiliary/bnat/bnat_router.rb:          OptString.new('OUTINF',    [true, 'The external interface connected to the internet', 'eth1']),
+auxiliary/bnat/bnat_router.rb:          OptString.new('ININF',     [true, 'The internal interface connected to the network', 'eth2']),
+auxiliary/gather/java_rmi_registry.rb:        interface. It enumerates the names bound in a registry and looks up each
+auxiliary/gather/ibm_sametime_enumerate_users.rb:        interface using either a dictionary attack (which is preferred), or a
+auxiliary/gather/ibm_sametime_version.rb:        This module scans an IBM Lotus Sametime web interface to enumerate
+auxiliary/gather/ibm_sametime_room_brute.rb:        Lotus Notes Sametime web interface.
+auxiliary/gather/mcafee_epo_xxe.rb:      if installed with a local SQL Server instance, the SQL Server is listening on all interfaces.
+auxiliary/gather/corpwatch_lookup_id.rb:        This module interfaces with the CorpWatch API to get publicly available
+auxiliary/gather/xerox_workcentre_5xxx_ldap.rb:        OptString.new('PASSWORD', [true, 'Password to access administrative interface. Defaults to 1111', '1111']),
+auxiliary/gather/corpwatch_lookup_name.rb:          This module interfaces with the CorpWatch API to get publicly available
+auxiliary/gather/opennms_xxe.rb:      OpenNMS is vulnerable to XML External Entity Injection in the Real-Time Console interface.
+auxiliary/gather/censys_search.rb:        accessible through web interface. The search endpoint allows searches
+auxiliary/scanner/msf/msf_rpc_login.rb:        Metasploit RPC interface using a specific
+auxiliary/scanner/msf/msf_web_login.rb:        web interface using a specific user/pass.
+auxiliary/scanner/msf/msf_web_login.rb:      vprint_error("Expected metasploit page - not msf web interface? #{res.body}")
+auxiliary/scanner/dect/call_scanner.rb:    print_status("Opening interface: #{datastore['INTERFACE']}")
+auxiliary/scanner/dect/call_scanner.rb:      print_status("Closing interface")
+auxiliary/scanner/dect/station_scanner.rb:    print_status("Opening interface: #{datastore['INTERFACE']}")
+auxiliary/scanner/dect/station_scanner.rb:      print_status("Closing interface")
+auxiliary/scanner/nexpose/nexpose_api_login.rb:        This module simply attempts to login to a NeXpose API interface using a
+auxiliary/scanner/nexpose/nexpose_api_login.rb:      vprint_error("Did not get 200 for API XML interface")
+auxiliary/scanner/vmware/vmware_screenshot_stealer.rb:        the web interface. It then searches through the datastores looking for screenshots.
+auxiliary/scanner/vmware/vmware_enum_vms.rb:        running the web interface. This would include ESX/ESXi and VMWare Server.
+auxiliary/scanner/vmware/esx_fingerprint.rb:        This module accesses the web API interfaces for VMware ESX/ESXi servers
+auxiliary/scanner/ssh/ssh_login_pubkey.rb:        OptString.new('SSH_KEYFILE_B64', [false, 'Raw data of an unencrypted SSH public key. This should be used by programmatic interfaces to this module only.', '']),
+auxiliary/scanner/ssh/ssh_identify_pubkeys.rb:        OptString.new('SSH_KEYFILE_B64', [false, 'Raw data of an unencrypted SSH public key. This should be used by programmatic interfaces to this module only.', '']),
+auxiliary/scanner/nessus/nessus_xmlrpc_login.rb:        This module simply attempts to login to a Nessus XMLRPC interface using a
+auxiliary/scanner/nessus/nessus_rest_login.rb:        This module will attempt to authenticate to a Nessus server RPC interface.
+auxiliary/scanner/nessus/nessus_xmlrpc_ping.rb:        for Nessus XMLRPC interface.'
+auxiliary/scanner/http/canon_wireless.rb:          This module enumerates wireless credentials from Canon printers with a web interface.
+auxiliary/scanner/http/rfcode_reader_enum.rb:        This module simply attempts to login to a RFCode Reader web interface.
+auxiliary/scanner/http/rfcode_reader_enum.rb:  # Interface configuration: /rfcode_reader/api/interfacestatus.json
+auxiliary/scanner/http/rfcode_reader_enum.rb:        'uri'       => '/rfcode_reader/api/interfacestatus.json',
+auxiliary/scanner/http/rfcode_reader_enum.rb:        vprint_status("#{rhost}:#{rport} - Collecting interface info...")
+auxiliary/scanner/http/f5_mgmt_scanner.rb:        This module scans for web management interfaces of the following F5 Networks devices:
+auxiliary/scanner/http/f5_mgmt_scanner.rb:      # Detect BigIP management interface
+auxiliary/scanner/http/f5_mgmt_scanner.rb:        print_good("F5 BigIP web management interface found")
+auxiliary/scanner/http/f5_mgmt_scanner.rb:      # Detect EM management interface
+auxiliary/scanner/http/f5_mgmt_scanner.rb:        print_good("F5 Enterprise Manager web management interface found")
+auxiliary/scanner/http/f5_mgmt_scanner.rb:      # Detect ARX management interface
+auxiliary/scanner/http/f5_mgmt_scanner.rb:        print_good("ARX web management interface found")
+auxiliary/scanner/http/f5_mgmt_scanner.rb:    # Detect BigIQ management interface
+auxiliary/scanner/http/f5_mgmt_scanner.rb:      print_good("F5 BigIQ web management interface found")
+auxiliary/scanner/http/f5_mgmt_scanner.rb:    # Detect FirePass management interface
+auxiliary/scanner/http/f5_mgmt_scanner.rb:      print_good("F5 FirePass web management interface found")
+auxiliary/scanner/http/dolibarr_login.rb:        This module attempts to authenticate to a Dolibarr ERP/CRM's admin web interface,
+auxiliary/scanner/http/cisco_device_manager.rb:        web interface exposed. The USERNAME and PASSWORD options can be used to specify
+auxiliary/scanner/http/zabbix_login.rb:  # "In case of five consecutive failed login attempts, Zabbix interface will pause for 30
+auxiliary/scanner/http/titan_ftp_admin_pwd.rb:      interface, which listens on TCP Port 31001 by default, by sending an
+auxiliary/scanner/http/dlink_user_agent_backdoor.rb:        This module attempts to find D-Link devices running Alphanetworks web interfaces affected
+auxiliary/scanner/http/splunk_web_login.rb:        This module simply attempts to login to a Splunk web interface.  Please note the
+auxiliary/scanner/http/novell_mdm_creds.rb:        print_good("Access the admin interface here: #{ip}:#{rport}#{target_uri.path}dashboard/")
+auxiliary/scanner/http/sap_businessobjects_user_brute.rb:        The dswsbobje interface is only used to verify valid credentials for CmcApp.
+auxiliary/scanner/http/smt_ipmi_url_redirect_traversal.rb:  APP_NAME = "Supermicro web interface"
+auxiliary/scanner/http/smt_ipmi_url_redirect_traversal.rb:        accessible through the web interface of Supermicro Onboard IPMI controllers.  The vulnerability
+auxiliary/scanner/http/smt_ipmi_49152_exposure.rb:        This module abuses a file exposure vulnerability accessible through the web interface
+auxiliary/scanner/http/wordpress_ghost_scanner.rb:      a call to the WordPress XMLRPC interface. If the target is vulnerable, the system
+auxiliary/scanner/http/wordpress_ghost_scanner.rb:      print_error("XMLRPC interface is not enabled")
+auxiliary/scanner/http/surgenews_user_creds.rb:        This module exploits a vulnerability in the WebNews web interface
+auxiliary/scanner/http/sap_businessobjects_user_enum.rb:        users. The dswsbobje interface is only used to verify valid
+auxiliary/scanner/http/groupwise_agents_http_traversal.rb:        The vulnerability exists in the web interface of both the Post Office and the
+auxiliary/scanner/http/vcms_login.rb:        This module attempts to authenticate to an English-based V-CMS login interface. It
+auxiliary/scanner/http/smt_ipmi_cgi_scanner.rb:    vprint_status("Checking if it's a Supermicro IPMI web interface...")
+auxiliary/scanner/http/smt_ipmi_cgi_scanner.rb:      vprint_good("Supermicro IPMI web interface found")
+auxiliary/scanner/http/smt_ipmi_cgi_scanner.rb:      vprint_error("Supermicro IPMI web interface not found")
+auxiliary/scanner/rogue/rogue_recv.rb:    print_status("Opening the capture interface...")
+auxiliary/scanner/misc/dvr_config_disclosure.rb:        web interface of multiple manufacturers DVR systems, which allows to retrieve the
+auxiliary/scanner/misc/cctv_dvr_login.rb:      OptPort.new('HTTP_PORT', [true, "The HTTP port for the IE ActiveX web client interface", 80]),
+auxiliary/scanner/misc/cctv_dvr_login.rb:      http_interface_check(h)
+auxiliary/scanner/misc/cctv_dvr_login.rb:  def http_interface_check(h)
+auxiliary/scanner/misc/cctv_dvr_login.rb:        print_good("Confirmed IE ActiveX HTTP interface (#{v}): #{uri}")
+auxiliary/scanner/misc/cctv_dvr_login.rb:        print_status("An unknown HTTP interface was found on #{datastore['HTTP_PORT']}/TCP")
+auxiliary/scanner/misc/cctv_dvr_login.rb:      print_status("IE ActiveX HTTP interface not found on #{datastore['HTTP_PORT']}/TCP")
+auxiliary/scanner/misc/java_rmi_server.rb:    dgc_interface_hash = calculate_interface_hash(
+auxiliary/scanner/misc/java_rmi_server.rb:      hash: dgc_interface_hash,
+auxiliary/scanner/snmp/cnpilot_r_snmp_loot.rb:      wireless_interface_ssid = snmp.get_value('1.3.6.1.4.1.41010.1.10.2.1.1.1.6.1')
+auxiliary/scanner/snmp/cnpilot_r_snmp_loot.rb:      wireless_interface_encryptionkey = snmp.get_value('1.3.6.1.4.1.41010.1.10.2.1.1.1.8.1')
+auxiliary/scanner/snmp/cnpilot_r_snmp_loot.rb:      wireless_interface_encryption = snmp.get_value('1.3.6.1.4.1.41010.1.10.2.1.1.1.7.1')
+auxiliary/scanner/snmp/cnpilot_r_snmp_loot.rb:      cnpilot_info << "Wireless Interface SSID: #{wireless_interface_ssid}" << "\n"
+auxiliary/scanner/snmp/cnpilot_r_snmp_loot.rb:      cnpilot_info << "Wireless Interface Encryption Key: #{wireless_interface_encryptionkey}" << "\n"
+auxiliary/scanner/snmp/cnpilot_r_snmp_loot.rb:      cnpilot_info << "Wireless Interface Encryption (1 - Open mode, 2 - wpa2 mode, 3 - EAP-TTLS): #{wireless_interface_encryption}" << "\n"
+auxiliary/scanner/snmp/cnpilot_r_snmp_loot.rb:      print_good("Wireless Interface SSID: #{wireless_interface_ssid}")
+auxiliary/scanner/snmp/cnpilot_r_snmp_loot.rb:      print_good("Wireless Interface Encryption Key: #{wireless_interface_encryptionkey}")
+auxiliary/scanner/snmp/cnpilot_r_snmp_loot.rb:      print_good("Wireless Interface Encryption (1 - Open mode, 2 - wpa2 mode, 3 - EAP-TTLS): #{wireless_interface_encryption} \n")
+auxiliary/scanner/snmp/sbg6580_enum.rb:        and password for the device user interface as well as wireless network keys
+auxiliary/scanner/snmp/sbg6580_enum.rb:        # attempt to get the username and password for the device user interface
+auxiliary/scanner/snmp/sbg6580_enum.rb:          # web user interface shipped with the device
+auxiliary/scanner/snmp/sbg6580_enum.rb:    # The ifTable contains interface entries where each row represents
+auxiliary/scanner/snmp/sbg6580_enum.rb:    # management information for a particular interface. Locate the first
+auxiliary/scanner/snmp/sbg6580_enum.rb:    # interface where ifType is 71 (ieee80211) and ifAdminStatus is 1 (up).
+auxiliary/scanner/snmp/epmp1000_snmp_loot.rb:      wireless_interface_ssid = snmp.get_value('1.3.6.1.4.1.17713.21.3.8.2.2.0')
+auxiliary/scanner/snmp/epmp1000_snmp_loot.rb:      wireless_interface_encryptionkey = snmp.get_value('1.3.6.1.4.1.17713.21.3.8.2.4.0')
+auxiliary/scanner/snmp/epmp1000_snmp_loot.rb:      wireless_interface_encryption = snmp.get_value('1.3.6.1.4.1.17713.21.3.8.2.3.0')
+auxiliary/scanner/snmp/epmp1000_snmp_loot.rb:      epmp_info << "Wireless Interface SSID: #{wireless_interface_ssid}" << "\n"
+auxiliary/scanner/snmp/epmp1000_snmp_loot.rb:      epmp_info << "Wireless Interface Encryption Key: #{wireless_interface_encryptionkey}" << "\n"
+auxiliary/scanner/snmp/epmp1000_snmp_loot.rb:      epmp_info << "Wireless Interface Encryption (1 - Open mode, 2 - wpa2 mode, 3 - EAP-TTLS): #{wireless_interface_encryption}" << "\n"
+auxiliary/scanner/snmp/epmp1000_snmp_loot.rb:      print_good("Wireless Interface SSID: #{wireless_interface_ssid}")
+auxiliary/scanner/snmp/epmp1000_snmp_loot.rb:      print_good("Wireless Interface Encryption Key: #{wireless_interface_encryptionkey}")
+auxiliary/scanner/snmp/epmp1000_snmp_loot.rb:      print_good("Wireless Interface Encryption (1 - Open mode, 2 - wpa2 mode, 3 - EAP-TTLS): #{wireless_interface_encryption} \n")
+auxiliary/scanner/snmp/snmp_enum.rb:        "Network information", "Network interfaces",
+auxiliary/scanner/snmp/snmp_enum.rb:      network_interfaces = []
+auxiliary/scanner/snmp/snmp_enum.rb:        network_interfaces.push({
+auxiliary/scanner/snmp/snmp_enum.rb:      if not network_interfaces.empty?
+auxiliary/scanner/snmp/snmp_enum.rb:        output_data["Network interfaces"] = network_interfaces
+auxiliary/scanner/snmp/snmp_enum.rb:      process_interfaces = []
+auxiliary/scanner/snmp/snmp_enum.rb:        process_interfaces.push([id.value, status.value, name.value, path.value, param.value])
+auxiliary/scanner/snmp/snmp_enum.rb:      if not process_interfaces.empty?
+auxiliary/scanner/snmp/snmp_enum.rb:        output_data["Processes"] = [["Id","Status","Name","Path","Parameters"]] + process_interfaces
+auxiliary/scanner/scada/profinet_siemens.rb:        OptString.new('INTERFACE', [ true, 'Set an interface', 'eth0' ]),
+auxiliary/scanner/scada/profinet_siemens.rb:      print_error("Error: interface #{iface} not active?")
+auxiliary/scanner/ntp/ntp_reslist_dos.rb:        obtains the list of restrictions placed on various network interfaces,
+auxiliary/scanner/ntp/ntp_reslist_dos.rb:        traffic amplification) via spoofed requests. The more interfaces, networks
+auxiliary/scanner/ip/ipidseq.rb:      OptString.new('INTERFACE', [false, 'The name of the interface'])
+auxiliary/scanner/ip/ipidseq.rb:  # This gets set via the usual capture_sendto interface
+auxiliary/scanner/portscan/syn.rb:      OptString.new('INTERFACE', [false, 'The name of the interface'])
+auxiliary/scanner/portscan/xmas.rb:      OptString.new('INTERFACE', [false, 'The name of the interface'])
+auxiliary/scanner/portscan/ack.rb:      OptString.new('INTERFACE', [false, 'The name of the interface'])
+auxiliary/scanner/discovery/ipv6_neighbor.rb:    @interface = datastore['INTERFACE'] || Pcap.lookupdev
+auxiliary/scanner/discovery/ipv6_neighbor.rb:    @shost ||= get_ipv4_addr(@interface) if @netifaces
+auxiliary/scanner/discovery/ipv6_neighbor.rb:    @smac ||= get_mac(@interface) if @netifaces
+auxiliary/scanner/discovery/arp_sweep.rb:    @interface = datastore['INTERFACE'] || Pcap.lookupdev
+auxiliary/scanner/discovery/arp_sweep.rb:    shost ||= get_ipv4_addr(@interface) if @netifaces
+auxiliary/scanner/discovery/arp_sweep.rb:    smac ||= get_mac(@interface) if @netifaces
+auxiliary/scanner/discovery/ipv6_neighbor_router_advertisement.rb:    @interface = datastore['INTERFACE'] || Pcap.lookupdev
+auxiliary/scanner/discovery/ipv6_neighbor_router_advertisement.rb:    @shost ||= get_ipv4_addr(@interface) if @netifaces
+auxiliary/scanner/discovery/ipv6_neighbor_router_advertisement.rb:    @smac ||= get_mac(@interface) if @netifaces
+auxiliary/scanner/discovery/ipv6_multicast_ping.rb:    smac ||= get_mac(@interface) if @netifaces
+auxiliary/scanner/discovery/ipv6_multicast_ping.rb:    @interface = datastore['INTERFACE'] || Pcap.lookupdev
+auxiliary/scanner/discovery/ipv6_multicast_ping.rb:    # Figure out our source address by the link-local interface
+auxiliary/scanner/openvas/openvas_gsad_login.rb:        This module simply attempts to login to an OpenVAS gsad interface
+auxiliary/admin/http/kaseya_master_admin.rb:        interface, but the application does nothing to prevent this apart from attempting to
+auxiliary/admin/http/axigen_file_access.rb:        interface of Axigen, which allows an authenticated user to read and delete
+auxiliary/admin/http/mutiny_frontend_read_delete.rb:      'uri'           => normalize_uri(target_uri.path, "interface", "EditDocument"),
+auxiliary/admin/http/mutiny_frontend_read_delete.rb:      'uri'       => normalize_uri(target_uri.path, "interface", "EditDocument"),
+auxiliary/admin/http/mutiny_frontend_read_delete.rb:        'uri'    => normalize_uri(target_uri.path, "interface", "index.do"),
+auxiliary/admin/http/mutiny_frontend_read_delete.rb:      'uri'       => normalize_uri(target_uri.path, "interface", "j_security_check"),
+auxiliary/admin/http/mutiny_frontend_read_delete.rb:    if not res or res.code != 302 or res.headers['Location'] !~ /interface\/index.do/
+auxiliary/admin/http/mutiny_frontend_read_delete.rb:      'uri'    => normalize_uri(target_uri.path, "interface", "index.do"),
+auxiliary/admin/http/netgear_soap_password_extractor.rb:        It allows to extract the password for the remote management interface. This module has been
+auxiliary/admin/http/linksys_tmunblock_admin_reset_bof.rb:        to reset the password of the management interface temporarily to an empty value.
+auxiliary/admin/http/linksys_wrt54gl_exec.rb:        You will need credentials to the web interface to access the vulnerable part
+auxiliary/admin/http/arris_motorola_surfboard_backdoor_xss.rb:        The web interface for the Arris / Motorola Surfboard SBG6580 has
+auxiliary/admin/http/arris_motorola_surfboard_backdoor_xss.rb:        Javascript that can perform any available action in the router interface.
+auxiliary/admin/http/arris_motorola_surfboard_backdoor_xss.rb:        [ 'CVE', '2015-0966' ], # "techician/yZgO8Bvj" web interface backdoor
+auxiliary/admin/http/arris_motorola_surfboard_backdoor_xss.rb:        "A string of javascript to execute in the context of the device web interface.",
+auxiliary/admin/http/arris_motorola_surfboard_backdoor_xss.rb:        "A URL to inject into a script tag in the context of the device web interface.",
+auxiliary/admin/http/tomcat_administration.rb:      'Description' => 'Detect the Tomcat administration interface.  The administration interface is included in versions 5.5 and lower.
+auxiliary/admin/http/tomcat_administration.rb:                        # version of admin interface source: O'Reilly Tomcat The Definitive Guide, page 82
+auxiliary/admin/http/iomega_storcenterpro_sessionid.rb:        The Iomega StorCenter Pro Network Attached Storage device web interface increments sessions IDs,
+auxiliary/admin/http/dlink_dsl320b_password_extractor.rb:        management interface.
+auxiliary/admin/http/nuuo_nvrmini_reset.rb:        to an administrator password reset on the exposed web management interface.
+auxiliary/admin/http/linksys_e1500_e2500_exec.rb:        Default credentials for the web interface are admin/admin or admin/password. Since
+auxiliary/admin/ms/ms08_059_his2006.rb:interface mIDA_interface
+auxiliary/admin/edirectory/edirectory_edirutil.rb:        following actions via the SOAP interface: GET_DN, READ_LOGS, LIST_SERVICES,
+auxiliary/admin/android/google_play_store_uxss_xframe_rce.rb:        4.4. Second, the Google Play store's web interface fails to enforce a
+auxiliary/dos/http/3com_superstack_switch.rb:        to the HTTP Management interface, the switch stops responding
+auxiliary/dos/http/canon_wireless_printer.rb:        The HTTP management interface on several models of Canon Wireless printers
+post/linux/gather/enum_network.rb:          IPTables rules, interfaces, wireless information, open and listening
+post/cisco/gather/enum_cisco.rb:        "cmd"  => "show ip interface brief",
+post/cisco/gather/enum_cisco.rb:        "fn"   => "interface_info",
+post/windows/gather/credentials/filezilla_server.rb:    fsi_xml = ""   # FileZilla Server Interface.xml - Last server used with the interface
+post/windows/gather/credentials/filezilla_server.rb:      lastser = parse_interface(fsi_xml)
+post/windows/gather/credentials/filezilla_server.rb:  def parse_interface(data)
+post/windows/gather/credentials/mcafee_vse_hashdump.rb:        used to lock down the user interface. Hashcat supports cracking this type of
+post/windows/gather/screen_spy.rb:        interface.
+post/windows/wlan/wlan_profile.rb:    wlan_iflist = enum_interfaces(wlan_handle)
+post/windows/wlan/wlan_profile.rb:      print_status("No wireless interfaces")
+post/windows/wlan/wlan_profile.rb:    #Take each enumerated interface and gets the profile information available on each one
+post/windows/wlan/wlan_profile.rb:    wlan_iflist.each do |interface|
+post/windows/wlan/wlan_profile.rb:      wlan_profiles = enum_profiles(wlan_handle, interface['guid'])
+post/windows/wlan/wlan_profile.rb:      guid = guid_to_string(interface['guid'])
+post/windows/wlan/wlan_profile.rb:      wlan_info << "GUID: #{guid} Description: #{interface['description']} State: #{interface['state']}\n"
+post/windows/wlan/wlan_profile.rb:  def enum_interfaces(wlan_handle)
+post/windows/wlan/wlan_profile.rb:    interfaces = []
+post/windows/wlan/wlan_profile.rb:      interface = {}
+post/windows/wlan/wlan_profile.rb:      interface['guid'] = @host_process.memory.read(pointer,16)
+post/windows/wlan/wlan_profile.rb:      interface['description'] = @host_process.memory.read(pointer,512)
+post/windows/wlan/wlan_profile.rb:      #Read the state of the interface (4 bytes)
+post/windows/wlan/wlan_profile.rb:          interface['state'] = "The interface is not ready to operate."
+post/windows/wlan/wlan_profile.rb:          interface['state'] = "The interface is connected to a network."
+post/windows/wlan/wlan_profile.rb:          interface['state'] = "The interface is the first node in an ad hoc network. No peer has connected."
+post/windows/wlan/wlan_profile.rb:          interface['state'] = "The interface is disconnecting from the current network."
+post/windows/wlan/wlan_profile.rb:          interface['state'] = "The interface is not connected to any network."
+post/windows/wlan/wlan_profile.rb:          interface['state'] = "The interface is attempting to associate with a network."
+post/windows/wlan/wlan_profile.rb:          interface['state'] = "Auto configuration is discovering the settings for the network."
+post/windows/wlan/wlan_profile.rb:          interface['state'] = "The interface is in the process of authenticating."
+post/windows/wlan/wlan_profile.rb:          interface['state'] = "Unknown State"
+post/windows/wlan/wlan_profile.rb:      interfaces << interface
+post/windows/wlan/wlan_profile.rb:    return interfaces
+post/windows/wlan/wlan_current_connection.rb:        wireless lan interface on the target machine.
+post/windows/wlan/wlan_current_connection.rb:    wlan_iflist = enum_interfaces(wlan_handle)
+post/windows/wlan/wlan_current_connection.rb:    wlan_iflist.each do |interface|
+post/windows/wlan/wlan_current_connection.rb:      connect_info = query_current_connection(wlan_handle, interface['guid'])
+post/windows/wlan/wlan_current_connection.rb:      guid = guid_to_string(interface['guid'])
+post/windows/wlan/wlan_current_connection.rb:      wlan_connection = "GUID: #{guid} \nDescription: #{interface['description']} \nState: #{interface['state']}\n"
+post/windows/wlan/wlan_current_connection.rb:        wlan_connection << "\tThis interface is not currently connected to a network\n"
+post/windows/wlan/wlan_current_connection.rb:    #Check the size of the SSID value. If we get nothing back, the interface is not currently connected
+post/windows/wlan/wlan_current_connection.rb:  def enum_interfaces(wlan_handle)
+post/windows/wlan/wlan_current_connection.rb:    interfaces = []
+post/windows/wlan/wlan_current_connection.rb:      interface = {}
+post/windows/wlan/wlan_current_connection.rb:      interface['guid'] = @host_process.memory.read(pointer,16)
+post/windows/wlan/wlan_current_connection.rb:      interface['description'] = @host_process.memory.read(pointer,512)
+post/windows/wlan/wlan_current_connection.rb:      #Read the state of the interface (4 bytes)
+post/windows/wlan/wlan_current_connection.rb:          interface['state'] = "The interface is not ready to operate."
+post/windows/wlan/wlan_current_connection.rb:          interface['state'] = "The interface is connected to a network."
+post/windows/wlan/wlan_current_connection.rb:          interface['state'] = "The interface is the first node in an ad hoc network. No peer has connected."
+post/windows/wlan/wlan_current_connection.rb:          interface['state'] = "The interface is disconnecting from the current network."
+post/windows/wlan/wlan_current_connection.rb:          interface['state'] = "The interface is not connected to any network."
+post/windows/wlan/wlan_current_connection.rb:          interface['state'] = "The interface is attempting to associate with a network."
+post/windows/wlan/wlan_current_connection.rb:          interface['state'] = "Auto configuration is discovering the settings for the network."
+post/windows/wlan/wlan_current_connection.rb:          interface['state'] = "The interface is in the process of authenticating."
+post/windows/wlan/wlan_current_connection.rb:          interface['state'] = "Unknown State"
+post/windows/wlan/wlan_current_connection.rb:      interfaces << interface
+post/windows/wlan/wlan_current_connection.rb:    return interfaces
+post/windows/wlan/wlan_disconnect.rb:        on the specified interface.
+post/windows/wlan/wlan_disconnect.rb:    wlan_iflist = enum_interfaces(wlan_handle)
+post/windows/wlan/wlan_disconnect.rb:    #Check the size of the SSID value. If we get nothing back, the interface is not currently connected
+post/windows/wlan/wlan_disconnect.rb:  def enum_interfaces(wlan_handle)
+post/windows/wlan/wlan_disconnect.rb:    interfaces = []
+post/windows/wlan/wlan_disconnect.rb:      interface = {}
+post/windows/wlan/wlan_disconnect.rb:      interface['guid'] = @host_process.memory.read(pointer,16)
+post/windows/wlan/wlan_disconnect.rb:      interface['description'] = @host_process.memory.read(pointer,512)
+post/windows/wlan/wlan_disconnect.rb:      #Read the state of the interface (4 bytes)
+post/windows/wlan/wlan_disconnect.rb:          interface['state'] = "The interface is not ready to operate."
+post/windows/wlan/wlan_disconnect.rb:          interface['state'] = "The interface is connected to a network."
+post/windows/wlan/wlan_disconnect.rb:          interface['state'] = "The interface is the first node in an ad hoc network. No peer has connected."
+post/windows/wlan/wlan_disconnect.rb:          interface['state'] = "The interface is disconnecting from the current network."
+post/windows/wlan/wlan_disconnect.rb:          interface['state'] = "The interface is not connected to any network."
+post/windows/wlan/wlan_disconnect.rb:          interface['state'] = "The interface is attempting to associate with a network."
+post/windows/wlan/wlan_disconnect.rb:          interface['state'] = "Auto configuration is discovering the settings for the network."
+post/windows/wlan/wlan_disconnect.rb:          interface['state'] = "The interface is in the process of authenticating."
+post/windows/wlan/wlan_disconnect.rb:          interface['state'] = "Unknown State"
+post/windows/wlan/wlan_disconnect.rb:      interfaces << interface
+post/windows/wlan/wlan_disconnect.rb:    return interfaces
+post/windows/wlan/wlan_bss_list.rb:    wlan_iflist = enum_interfaces(wlan_handle)
+post/windows/wlan/wlan_bss_list.rb:    wlan_iflist.each do |interface|
+post/windows/wlan/wlan_bss_list.rb:      #Scan with the interface, then wait 10 seconds to give it time to finish
+post/windows/wlan/wlan_bss_list.rb:      scan_results = @wlanapi.WlanScan(wlan_handle,interface['guid'],nil,nil,nil)
+post/windows/wlan/wlan_bss_list.rb:      bss_list = wlan_get_networks(wlan_handle,interface['guid'])
+post/windows/wlan/wlan_bss_list.rb:  def enum_interfaces(wlan_handle)
+post/windows/wlan/wlan_bss_list.rb:    interfaces = []
+post/windows/wlan/wlan_bss_list.rb:      interface = {}
+post/windows/wlan/wlan_bss_list.rb:      interface['guid'] = @host_process.memory.read(pointer,16)
+post/windows/wlan/wlan_bss_list.rb:      interface['description'] = @host_process.memory.read(pointer,512)
+post/windows/wlan/wlan_bss_list.rb:      #Read the state of the interface (4 bytes)
+post/windows/wlan/wlan_bss_list.rb:          interface['state'] = "The interface is not ready to operate."
+post/windows/wlan/wlan_bss_list.rb:          interface['state'] = "The interface is connected to a network."
+post/windows/wlan/wlan_bss_list.rb:          interface['state'] = "The interface is the first node in an ad hoc network. No peer has connected."
+post/windows/wlan/wlan_bss_list.rb:          interface['state'] = "The interface is disconnecting from the current network."
+post/windows/wlan/wlan_bss_list.rb:          interface['state'] = "The interface is not connected to any network."
+post/windows/wlan/wlan_bss_list.rb:          interface['state'] = "The interface is attempting to associate with a network."
+post/windows/wlan/wlan_bss_list.rb:          interface['state'] = "Auto configuration is discovering the settings for the network."
+post/windows/wlan/wlan_bss_list.rb:          interface['state'] = "The interface is in the process of authenticating."
+post/windows/wlan/wlan_bss_list.rb:          interface['state'] = "Unknown State"
+post/windows/wlan/wlan_bss_list.rb:      interfaces << interface
+post/windows/wlan/wlan_bss_list.rb:    return interfaces
+post/windows/capture/keylog_recorder.rb:          password. It is recommended to run this module as a job, otherwise it will tie up your framework user interface.
+post/windows/manage/portproxy.rb:        This module uses the PortProxy interface from netsh to set up
+post/windows/manage/portproxy.rb:    netsh_args = "interface portproxy "
+post/windows/manage/portproxy.rb:    output = cmd_exec("netsh","interface portproxy show all")
+post/windows/manage/portproxy.rb:    output = cmd_exec("netsh","interface ipv6 show interface")
+post/windows/manage/portproxy.rb:      print_status("IPv6 can be installed with \"netsh interface ipv6 install\"")
+post/windows/manage/portproxy.rb:      cmd_exec("netsh","interface ipv6 install",120)
+post/firefox/gather/cookies.rb:                        .getService(Components.interfaces.nsICookieManager);
+post/firefox/gather/cookies.rb:            if (cookie instanceof Components.interfaces.nsICookie){
+post/firefox/gather/xss.rb:                               .getService(Components.interfaces.nsIAppShellService)
+post/firefox/gather/history.rb:                .getService(Components.interfaces.nsINavHistoryService);
+post/firefox/gather/passwords.rb:                          .getService(Components.interfaces.nsILoginManager);
+post/firefox/manage/webcam_chat.rb:        .getService(Components.interfaces.nsIHttpProtocolHandler).userAgent;
+post/firefox/manage/webcam_chat.rb:    interface = load_interface('offerer.html')
+post/firefox/manage/webcam_chat.rb:    interface.gsub!(/\=SERVER\=/, server)
+post/firefox/manage/webcam_chat.rb:    interface.gsub!(/\=CHANNEL\=/, channel)
+post/firefox/manage/webcam_chat.rb:    interface.gsub!(/\=OFFERERID\=/, offerer_id)
+post/firefox/manage/webcam_chat.rb:             .getService(Components.interfaces.nsIAppShellService);
+post/firefox/manage/webcam_chat.rb:          var html = "#{Rex::Text.encode_base64(interface)}";
+post/multi/gather/firefox_creds.rb:          createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+post/multi/gather/wlan_geolocate.rb:      interface = cmd_exec("dmesg | grep -i wlan | cut -d ':' -f1 | uniq")
+post/multi/gather/wlan_geolocate.rb:      # Printing interface as this platform requires the interface to be specified
+post/multi/gather/wlan_geolocate.rb:      print_status("Found wireless interface: #{interface}")
+post/multi/gather/wlan_geolocate.rb:      listing = cmd_exec("ifconfig #{interface} scan")
+post/multi/escalate/cups_root_file_read.rb:        Error Log page in the web interface, the cupsd daemon (running with setuid root)
+post/multi/escalate/cups_root_file_read.rb:      # cups-config not present, ask the web interface what vn it is
+post/multi/manage/autoroute.rb:          and interface list then add routes to them. Default will add a default
+post/multi/manage/autoroute.rb:      print_status("Unable to get routes from session, trying interface list.")
+post/multi/manage/autoroute.rb:    if !autoadd_interface_routes && !found  # Check interface list for more possible routes
+post/multi/manage/autoroute.rb:  # Look at network interfaces as options for additional routes.
+post/multi/manage/autoroute.rb:  # @return [true] A route from the interface list was added
+post/multi/manage/autoroute.rb:  def autoadd_interface_routes
+post/multi/manage/autoroute.rb:    return unless interface_compatible?
+post/multi/manage/autoroute.rb:      session.net.config.each_interface do | interface | # Step through each of the network interfaces
+post/multi/manage/autoroute.rb:        (0..(interface.addrs.size - 1)).each do | index | # Step through the addresses for the interface
+post/multi/manage/autoroute.rb:          ip_addr = interface.addrs[index]
+post/multi/manage/autoroute.rb:          netmask = interface.netmasks[index]
+post/multi/manage/autoroute.rb:              found = true if add_route(subnet, netmask, interface.mac_name)
+post/multi/manage/autoroute.rb:      print_error("Unable to get interface information from session.")
+post/multi/manage/autoroute.rb:  # Checks to see if the session has capabilities of accessing network interfaces
+post/multi/manage/autoroute.rb:  # @return [true class] Session has ability to access network interfaces
+post/multi/manage/autoroute.rb:  def interface_compatible?
+post/multi/manage/autoroute.rb:    session.net.config.respond_to?(:each_interface)
+exploits/linux/http/sophos_wpa_iface_exec.rb:        No server-side sanitization is done on values passed when configuring a static network interface.
+exploits/linux/http/sophos_wpa_iface_exec.rb:        which is root when configuring the network interface. This module will inadvertently delete
+exploits/linux/http/sophos_wpa_iface_exec.rb:            'c' => 'netinterface',
+exploits/linux/http/netgear_wnr2000_rce.rb:        OptString.new('HttpUsername', [true, 'Username for the web interface (not needed but exploitation is faster)', 'admin']),
+exploits/linux/http/netgear_wnr2000_rce.rb:        OptString.new('HttpPassword', [true, 'Password for the web interface (not needed but exploitation is faster)', 'password']),
+exploits/linux/http/trendmicro_imsva_widget_exec.rb:        The specific flaw exists within the management interface, which listens on TCP port 443 by default. Trend Micro IMSVA product
+exploits/linux/http/trendmicro_imsva_widget_exec.rb:        OptString.new('TARGETURI', [true, 'The URI of the Trend Micro IMSVA management interface', '/'])
+exploits/linux/http/asuswrt_lan_rce.rb:    # this attack can also be used to overwrite the web interface password and achieve RCE by enabling SSH and rebooting!
+exploits/linux/http/supervisor_xmlrpc_exec.rb:    print_status('Extracting version from web interface..')
+exploits/linux/http/supervisor_xmlrpc_exec.rb:          print_bad('Could not extract version number from web interface')
+exploits/linux/http/supervisor_xmlrpc_exec.rb:      print_bad('Error connecting to web interface')
+exploits/linux/http/astium_sqli_upload.rb:    # Restore our original config.php, else the Astium web interface won't work anymore.
+exploits/linux/http/trueonline_billion_5200w_rce.rb:        OptString.new('HttpUsername', [true, 'Username for the web interface (using default credentials)', 'admin']),
+exploits/linux/http/trueonline_billion_5200w_rce.rb:        OptString.new('HttpPassword', [true, 'Password for the web interface (using default credentials)', 'password']),
+exploits/linux/http/smt_ipmi_close_window_bof.rb:        interface. The vulnerability exists on the close_window.cgi CGI application, and is due
+exploits/linux/http/dlink_command_php_exec_noauth.rb:        interface. The vulnerability exists in command.php, which is accessible without
+exploits/linux/http/sophos_wpa_sblistpack_exec.rb:        from the web interface without authentication. This module has been tested successfully
+exploits/linux/http/ueb9_api_storage.rb:        It was discovered that the api/storage web interface in Unitrends Backup (UB)
+exploits/linux/http/linksys_wrt160nv2_apply_exec.rb:        their web interface where default credentials are admin/admin or admin/password.
+exploits/linux/http/realtek_miniigd_upnp_exec_noauth.rb:        injection in the UPnP SOAP interface. Since it is a blind OS command injection vulnerability,
+exploits/linux/http/realtek_miniigd_upnp_exec_noauth.rb:        Opt::RPORT(52869) # port of UPnP SOAP webinterface
+exploits/linux/http/dlink_hnap_header_exec_noauth.rb:        interface. Since it is a blind OS command injection vulnerability, there is no
+exploits/linux/http/mutiny_frontend_upload.rb:      'uri'     => normalize_uri(target_uri.path, "interface","EditDocument"),
+exploits/linux/http/mutiny_frontend_upload.rb:        'uri'    => normalize_uri(target_uri.path, "interface", "index.do"),
+exploits/linux/http/mutiny_frontend_upload.rb:      'uri'       => normalize_uri(target_uri.path, "interface", "j_security_check"),
+exploits/linux/http/mutiny_frontend_upload.rb:    if res.nil? or res.code != 302 or res.headers['Location'] !~ /interface\/index.do/
+exploits/linux/http/mutiny_frontend_upload.rb:      'uri'    => normalize_uri(target_uri.path, "interface", "index.do"),
+exploits/linux/http/mutiny_frontend_upload.rb:      'uri' => normalize_uri(target_uri.path, "interface",  "/"),
+exploits/linux/http/dlink_hnap_login_bof.rb:        is exposed on the LAN interface on port 80. This vulnerability affects the HNAP SOAP protocol,
+exploits/linux/http/huawei_hg532n_cmdinject.rb:        The router's web interface has two kinds of logins, a "limited" user:user
+exploits/linux/http/huawei_hg532n_cmdinject.rb:        OptString.new('HttpUsername', [false, 'Valid web-interface user-mode username', 'user']),
+exploits/linux/http/huawei_hg532n_cmdinject.rb:        OptString.new('HttpPassword', [false, 'Web-interface username password', 'user']),
+exploits/linux/http/huawei_hg532n_cmdinject.rb:      fail_with(Failure::NoAccess, "Invalid web interface credentials #{username}:#{password}")
+exploits/linux/http/huawei_hg532n_cmdinject.rb:      print_warning "Could not get current forwarded ports from web interface"
+exploits/linux/http/huawei_hg532n_cmdinject.rb:    print_warning "Could not logout from web interface. Future web logins may fail!"
+exploits/linux/http/huawei_hg532n_cmdinject.rb:  # Main exploit code: login through web interface; port-forward router's
+exploits/linux/http/linksys_wrt110_cmd_exec.rb:        injection exploit in the ping field of the web interface.
+exploits/linux/http/nuuo_nvrmini_auth_rce.rb:        to an authenticated remote code execution on the exposed web administration interface. An administrative
+exploits/linux/http/nuuo_nvrmini_unauth_rce.rb:        to an unauthenticated remote code execution on the exposed web administration interface.
+exploits/linux/http/dlink_dir615_up_exec.rb:        their web interface, where default credentials are admin/admin or admin/password.
+exploits/linux/http/trueonline_p660hn_v2_rce.rb:        OptString.new('USERNAME', [true, 'Username for the web interface (using default credentials)', 'supervisor']),
+exploits/linux/http/trueonline_p660hn_v2_rce.rb:        OptString.new('PASSWORD', [true, 'Password for the web interface (using default credentials)', 'zyad1234']),
+exploits/linux/http/trueonline_p660hn_v2_rce.rb:      print_good("#{peer} - Successfully authenticated to the web interface.")
+exploits/linux/http/trueonline_p660hn_v2_rce.rb:      fail_with(Failure::Unknown, "#{peer} - Failed to authenticate to the web interface.")
+exploits/linux/http/samsung_srv_1670d_upload_exec.rb:        To authenticate for this attack, one can obtain web-interface credentials
+exploits/linux/http/samsung_srv_1670d_upload_exec.rb:        web interface credentials by sending a request to:
+exploits/linux/http/riverbed_netprofiler_netexpress_exec.rb:        command injection vulnerability in the web interface to obtain arbitrary code execution. Finally, an insecure
+exploits/linux/http/riverbed_netprofiler_netexpress_exec.rb:        OptString.new('RIVERBED_USER', [true, 'Web interface user account to add', 'user']),
+exploits/linux/http/riverbed_netprofiler_netexpress_exec.rb:        OptString.new('RIVERBED_PASSWORD', [true, 'Web interface user password', 'riverbed']),
+exploits/linux/http/dlink_dir300_exec_telnet.rb:        interface. The vulnerability exists in tools_vct.xgi, which is accessible with
+exploits/linux/http/linksys_e1500_apply_exec.rb:        Default credentials for the web interface are admin/admin or admin/password. Since
+exploits/linux/http/dlink_diagnostic_exec_noauth.rb:          Some D-Link Routers are vulnerable to OS Command injection in the web interface.
+exploits/linux/http/raidsonic_nas_ib5220_exec_noauth.rb:        interface. The vulnerability exists in timeHandler.cgi, which is accessible without
+exploits/linux/http/netgear_dgn2200b_pppoe_exec.rb:        on their web interface. Default credentials for the web interface are admin/admin
+exploits/linux/http/mvpower_dvr_shell_exec.rb:        on the web interface executes arbitrary operating system commands in
+exploits/linux/http/tp_link_sc2020n_authenticated_telnet_injection.rb:            to OS Command Injection via the web interface. By firing up the telnet daemon,
+exploits/linux/http/dlink_dcs_930l_authenticated_remote_command_execution.rb:        to OS Command Injection via the web interface.  The vulnerability
+exploits/linux/http/dlink_upnp_exec_noauth.rb:        interface. Since it is a blind OS command injection vulnerability, there is no
+exploits/linux/http/dlink_upnp_exec_noauth.rb:        Opt::RPORT(49152) # port of UPnP SOAP webinterface
+exploits/linux/http/alcatel_omnipcx_mastercgi_exec.rb:        HTTP management interface of the Alcatel-Lucent OmniPCX Enterprise
+exploits/linux/http/netgear_dgn1000b_setup_exec.rb:        vulnerability exists in the web interface, specifically in the setup.cgi component,
+exploits/linux/mysql/mysql_yassl_getname.rb:        configured to listen on an accessible network interface.  Lastly, the server
+exploits/freebsd/http/watchguard_cmd_exec.rb:        to the web interface. On the other hand, a vulnerability in the web interface allows the
+exploits/freebsd/http/watchguard_cmd_exec.rb:        OptString.new('WATCHGUARD_USER', [true, 'Web interface user account to add', 'backdoor']),
+exploits/freebsd/http/watchguard_cmd_exec.rb:        OptString.new('WATCHGUARD_PASSWORD', [true, 'Web interface user password', 'backdoor']),
+exploits/freebsd/misc/citrix_netscaler_soap_bof.rb:        The vulnerability exists in the SOAP handler, accessible through the web interface. A
+exploits/windows/http/hp_imc_bims_upload.rb:      vprint_status("Upload interface found. Must be tested to verify vulnerable state.")
+exploits/windows/http/edirectory_host.rb:        The web interface does not validate the length of the
+exploits/windows/http/vxsrchs_bof.rb:        in the web interface of VX Search Enterprise v9.5.12, caused by
+exploits/windows/http/trendmicro_officescan_widget_exec.rb:        The specific flaw exists within the management interface, which listens on TCP port 443 by default. The Trend Micro Officescan product
+exploits/windows/http/trendmicro_officescan_widget_exec.rb:        OptString.new('TARGETURI', [true, 'The URI of the Trend Micro OfficeScan management interface', '/'])
+exploits/windows/http/manage_engine_opmanager_rce.rb:        has a default password of "plugin" which cannot be reset through the user interface. By
+exploits/windows/http/dupscts_bof.rb:        in the web interface of Dup Scout Enterprise v9.5.14, caused by
+exploits/windows/http/syncbreeze_bof.rb:        in the web interface of Sync Breeze Enterprise v9.4.28, v10.0.28,
+exploits/windows/http/intrasrv_bof.rb:        Server 1.0. The web interface does not validate the boundaries of an
+exploits/windows/http/disksorter_bof.rb:        in the web interface of Disk Sorter Enterprise v9.5.12, caused by
+exploits/windows/http/solarwinds_storage_manager_sql.rb:        login interface.  It will send a malicious SQL query to create a JSP file
+exploits/windows/http/solarwinds_fsm_userlogin.rb:        6.6.5. The first vulnerability is an authentication bypass via the Change Advisor interface
+exploits/windows/http/dup_scout_enterprise_login_bof.rb:        10.0.18. The buffer overflow exists via the web interface during
+exploits/windows/http/oracle_btm_writetofile.rb:      soap_request << "xmlns:int=\"http://schemas.amberpoint.com/flashtunnel/interfaces\" "
+exploits/windows/http/oracle_btm_writetofile.rb:      soap_request << "xmlns:int=\"http://schemas.amberpoint.com/flashtunnel/interfaces\" "
+exploits/windows/http/oracle_btm_writetofile.rb:      soap_request << "xmlns:int=\"http://schemas.amberpoint.com/flashtunnel/interfaces\" "
+exploits/windows/http/disksavvy_get_bof.rb:        in the web interface of DiskSavvy Enterprise v9.1.14 and v9.3.14,
+exploits/windows/http/diskboss_get_bof.rb:        in the web interface of DiskBoss Enterprise v7.5.12, v7.4.28, and v8.2.14,
+exploits/windows/brightstor/etrust_itm_alert.rb:interface mIDA_interface
+exploits/windows/dcerpc/ms07_065_msmq.rb:        This module exploits a stack buffer overflow in the RPC interface
+exploits/windows/dcerpc/ms05_017_msmq.rb:        This module exploits a stack buffer overflow in the RPC interface
+exploits/windows/dcerpc/ms07_029_msdns_zonename.rb:          This module exploits a stack buffer overflow in the RPC interface
+exploits/windows/smb/ms04_031_netdde.rb:        precursor to the DCOM interface.  This exploit effects only operating systems
+exploits/windows/smb/ms07_029_msdns_zonename.rb:          This module exploits a stack buffer overflow in the RPC interface
+exploits/windows/smb/ms06_025_rasmans_reg.rb:    # Bind to the actual DCERPC interface
+exploits/windows/fileformat/ovf_format_string.rb:    <Disk ovf:capacity="8" ovf:capacityAllocationUnits="#{fs}" ovf:diskId="vmdisk1" ovf:fileRef="file1" ovf:format="http://www.vmware.com/interfaces/specifications/vmdk.html#streamOptimized" />
+exploits/windows/fileformat/wireshark_mpeg_overflow.rb:    # When file is open with GUI interface. This is NSEH/SEH overwrite
+exploits/windows/browser/novelliprint_datetime.rb:      "op-client-interface-version",
+exploits/windows/browser/novelliprint_executerequest_dbg.rb:    op		= "op-client-interface-version"
+exploits/windows/browser/cisco_playerpt_setsource_surl.rb:        as the installed with the web interface of Cisco Linksys WVC200 Wireless-G PTZ
+exploits/windows/browser/novelliprint_target_frame.rb:      "op-client-interface-version",
+exploits/windows/browser/cisco_playerpt_setsource.rb:        as the installed with the web interface of Cisco Linksys WVC200 Wireless-G PTZ
+exploits/windows/browser/mozilla_mchannel.rb:        #{js_element_name}.QueryInterface(Components.interfaces.nsIChannelEventSink).onChannelRedirect(null,new Object,0)
+exploits/windows/browser/mozilla_mchannel.rb:        #{js_element_name}.QueryInterface(Components.interfaces.nsIChannelEventSink).onChannelRedirect(null,new Object,0)
+exploits/windows/browser/ovftool_format_string.rb:    <Disk ovf:capacity="8" ovf:capacityAllocationUnits="#{fs}" ovf:diskId="vmdisk1" ovf:fileRef="file1" ovf:format="http://www.vmware.com/interfaces/specifications/vmdk.html#streamOptimized" />
+exploits/windows/browser/novelliprint_callbackurl.rb:        op-client-interface-version action of ienipp.ocx an attacker may be able to
+exploits/windows/browser/novelliprint_callbackurl.rb:<param name='operation' value='op-client-interface-version' />
+exploits/windows/ftp/wing_ftp_admin_exec.rb:        This module exploits the embedded Lua interpreter in the admin web interface for
+exploits/unix/http/lifesize_room.rb:      'uri'       => "/interface/interface.php?uniqueKey=#{rand_text_numeric(13)}",
+exploits/unix/http/vmturbo_vmtadmin_exec_noauth.rb:          OS Command injection in the web interface. Use reverse payloads for the most
+exploits/unix/misc/polycom_hdx_traceroute_exec.rb:      OptString.new('PASSWORD', [ false, "Password to access console interface if required."]),
+exploits/unix/misc/polycom_hdx_traceroute_exec.rb:      # couldnt find where to enable auth in web interface or telnet...but according to other module it exists..here in case.
+exploits/unix/polycom_hdx_auth_bypass.rb:            [ 'URL', 'http://blog.tempest.com.br/joao-paulo-campello/polycom-web-management-interface-os-command-injection.html' ],
+exploits/unix/webapp/openemr_upload_exec.rb:      'uri'    => normalize_uri(uri, "interface", "login", "login.php")
+exploits/unix/webapp/zimbra_lfi.rb:        then be used to create an authentication token for the admin web interface. This access
+exploits/unix/webapp/zimbra_lfi.rb:    #the initial POC for this vuln shows user creation with admin rights for the web interface, thats cool but a shell is even cooler
+exploits/unix/webapp/zimbra_lfi.rb:    #the web interface has a function to upload the latest version of the desktop client via /service/extension/clientUploader/upload/
+exploits/unix/webapp/openemr_sqli_privesc_upload.rb:      'uri'    => normalize_uri(uri, "interface", "login", "login.php")
+exploits/unix/webapp/openemr_sqli_privesc_upload.rb:      'uri'    => normalize_uri("#{base}", "interface", "main", "main_screen.php"),
+exploits/unix/webapp/openemr_sqli_privesc_upload.rb:      'uri'    => normalize_uri(uri, "interface", "new", "new_comprehensive_save.php")
+exploits/unix/webapp/openemr_sqli_privesc_upload.rb:      'uri'    => normalize_uri(uri, "interface", "super", "manage_site_files.php"),
+exploits/unix/webapp/tuleap_rest_unserialize_exec.rb:        API interface. The exploit's POP chain abuses the __toString() method from the Mustache class
+exploits/unix/webapp/mitel_awc_exec.rb:        Audio and Web Conferencing web interface.
+exploits/unix/webapp/twiki_maketext.rb:        module. This works in TWiki sites that have user interface localization enabled
+exploits/unix/webapp/foswiki_maketext.rb:        module.  Only Foswiki sites that have user interface localization enabled
+exploits/multi/http/processmaker_exec.rb:        the web interface.
+exploits/multi/http/sonicwall_gms_upload.rb:        Web Administration interface allows to abuse the "appliance" application and upload
+exploits/multi/http/mutiny_subnetmask_exec.rb:        the vulnerability the mutiny user must have access to the admin interface. The
+exploits/multi/http/mutiny_subnetmask_exec.rb:        OptString.new('TARGETURI', [ true, 'The base path to Mutiny', '/interface/' ]),
+exploits/multi/http/mutiny_subnetmask_exec.rb:      %Q|echo #{@netmask_eth0} > /opt/MUTINYJAVA/nemobjects/config/interface/eth0/0/netmask|,
+exploits/multi/http/mutiny_subnetmask_exec.rb:      %Q|tr -d "\\n\\r" < /opt/MUTINYJAVA/nemobjects/config/interface/eth0/0/netmask > /opt/MUTINYJAVA/nemobjects/config/interface/eth0/0/netmask.bak|,
+exploits/multi/http/mutiny_subnetmask_exec.rb:      %Q|mv -f /opt/MUTINYJAVA/nemobjects/config/interface/eth0/0/netmask.bak /opt/MUTINYJAVA/nemobjects/config/interface/eth0/0/netmask|,
+exploits/multi/http/coldfusion_rds.rb:        login that can be carried over to the admin web interface even though
+exploits/multi/http/coldfusion_rds.rb:        on the admin web interface leading to arbitrary code execution. Tested
+exploits/multi/http/coldfusion_rds.rb:    #can we access the admin interface?
+exploits/multi/http/apache_jetspeed_file_upload.rb:        interface beyond repair. No workaround has been found yet. Use this
+exploits/multi/http/glassfish_deployer.rb:          OptString.new('APP_RPORT',[ true,  'The Application interface port', '8080']),
+exploits/multi/http/glassfish_deployer.rb:    #Execute our payload using the application interface (no need to use auth bypass technique)
+exploits/multi/http/drupal_drupageddon.rb:    # call admin interface to extract CSRF token and enabled modules
+exploits/multi/http/splunk_mappy_exec.rb:        web based interface of Splunk 4.2 to 4.2.4. The vulnerability exists
+exploits/multi/http/splunk_mappy_exec.rb:        the default Administrator credential for Splunk. Note that the Splunk web interface
+exploits/multi/http/moodle_cmd_exec.rb:    Moodle allows an authenticated user to define spellcheck settings via the web interface.
+exploits/multi/http/atutor_sqli.rb:         and reach the administrator's interface where they can upload malicious code.
+exploits/multi/http/splunk_upload_app_exec.rb:        uploaded through the web based interface. Through the \'script\' search command a
+exploits/multi/http/splunk_upload_app_exec.rb:        the default Administrator credential for Splunk. Note that the Splunk web interface
+exploits/multi/http/trendmicro_threat_discovery_admin_sys_time_cmdi.rb:          interface (CVE-2016-7547).
+exploits/multi/http/sflog_upload_exec.rb:        interface, we can upload a backdoor that's accessible by any remote user, and then
+exploits/multi/http/zabbix_script_exec.rb:      'interfaces[1][isNew]' => true,
+exploits/multi/http/zabbix_script_exec.rb:      'interfaces[1][interfaceid]' => 1,
+exploits/multi/http/zabbix_script_exec.rb:      'interfaces[1][type]' => 1,
+exploits/multi/http/zabbix_script_exec.rb:      'interfaces[1][ip]' => '127.0.0.1',
+exploits/multi/http/zabbix_script_exec.rb:      'interfaces[1][dns]' => '',
+exploits/multi/http/zabbix_script_exec.rb:      'interfaces[1][useip]' => 1,
+exploits/multi/http/zabbix_script_exec.rb:      'interfaces[1][port]' => 10050,
+exploits/multi/http/metasploit_webui_console_command_execution.rb:        diagnostic console provides access to msfconsole via the web interface.
+exploits/multi/http/mediawiki_syntaxhighlight.rb:  # use deprecated interface
+exploits/multi/misc/java_jmx_server.rb:        This module takes advantage a Java JMX interface insecure configuration, which would
+exploits/multi/misc/java_jmx_server.rb:        allow loading classes from any remote (HTTP) URL. JMX interfaces with authentication
+exploits/multi/misc/java_jmx_server.rb:        interfaces with authentication enabled will be vulnerable only if a weak configuration
+exploits/multi/misc/java_jmx_server.rb:      Msf::OptString.new('JMXRMI', [true, 'The name where the JMX RMI interface is bound', 'jmxrmi'])
+exploits/multi/misc/java_jmx_server.rb:    rmi_classes_and_interfaces = [
+exploits/multi/misc/java_jmx_server.rb:    unless rmi_classes_and_interfaces.include? ref[:object]
+exploits/multi/misc/java_jdwp_debugger.rb:  # or one of its superclasses, superinterfaces, or implemented interfaces. Access control is not enforced;
+exploits/multi/misc/java_jdwp_debugger.rb:  # superinterfaces, or implemented interfaces. Access control is not enforced; for example, the values of
+exploits/multi/misc/java_jdwp_debugger.rb:  # superinterfaces, or implemented interfaces. Access control is not enforced; for example, private
+exploits/multi/misc/java_jdwp_debugger.rb:  # superinterfaces, or implemented interfaces. Access control is not enforced; for example, private methods
+exploits/multi/misc/java_rmi_server.rb:    dgc_interface_hash = calculate_interface_hash(
+exploits/multi/misc/java_rmi_server.rb:      hash: dgc_interface_hash,  # java.rmi.dgc.DGC interface hash
+exploits/multi/misc/msf_rpc_console.rb:        RPC interface.
+exploits/multi/misc/indesign_server_soap.rb:          This module abuses the "RunScript" procedure provided by the SOAP interface of
+exploits/multi/browser/firefox_queryinterface.rb:  location.QueryInterface(eval("Components.interfaces.nsIClassInfo"));
+exploits/aix/local/ibstat_path.rb:    print_status("Finding interface name...")
+exploits/aix/local/ibstat_path.rb:        print_status("Found interface #{iface}.")
+exploits/aix/local/ibstat_path.rb:      print_status("Found no interface, defaulting to en0.")
+exploits/android/fileformat/adobe_reader_pdf_js_interface.rb:          interfaces to untrusted javascript in a PDF. This module embeds the browser
+exploits/android/fileformat/adobe_reader_pdf_js_interface.rb:          exploit from android/webview_addjavascriptinterface into a PDF to get a
+exploits/android/fileformat/adobe_reader_pdf_js_interface.rb:    js = add_javascript_interface_exploit_js(ARCH_ARMLE)
+exploits/android/browser/webview_addjavascriptinterface.rb:        ['URL', 'http://blog.trustlook.com/2013/09/04/alert-android-webview-addjavascriptinterface-code-execution-vulnerability/'],
+exploits/android/browser/webview_addjavascriptinterface.rb:        ['URL', 'https://labs.mwrinfosecurity.com/advisories/2013/09/24/webview-addjavascriptinterface-remote-code-execution/'],
+exploits/android/browser/webview_addjavascriptinterface.rb:      send_response(cli, add_javascript_interface_exploit_js(normalize_arch arch), response_opts)
+exploits/android/browser/webview_addjavascriptinterface.rb:    "<!doctype html><html><body><script>#{add_javascript_interface_exploit_js(arch)}</script></body></html>"
+exploits/osx/afp/loginext.rb:    # Add the data stream interface header
+exploits/osx/browser/mozilla_mchannel.rb:    #{js_element_name}.QueryInterface(Components.interfaces.nsIChannelEventSink);
+payloads/singles/firefox/shell_bind_tcp.rb:                             .createInstance(Components.interfaces.nsIServerSocket);
+payloads/singles/firefox/shell_bind_tcp.rb:                     .createInstance(Components.interfaces.nsIInputStreamPump);
+payloads/singles/firefox/shell_reverse_tcp.rb:                                .getService(Components.interfaces.nsISocketTransportService);
+payloads/singles/firefox/shell_reverse_tcp.rb:                       .createInstance(Components.interfaces.nsIInputStreamPump);
+payloads/singles/firefox/exec.rb:        .getService(Components.interfaces.nsIHttpProtocolHandler).userAgent;
+payloads/singles/firefox/exec.rb:                          .createInstance(Components.interfaces.nsIProcess);
+payloads/singles/firefox/exec.rb:                    .createInstance(Components.interfaces.nsILocalFile);
