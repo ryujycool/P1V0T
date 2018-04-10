@@ -75,7 +75,7 @@ class MetasploitModule < Msf::Post
 		#
 		# Windows commands
 		#
-		if is_admin?
+		if is_admin? or is_system?
 		
 			rra_info = service_info("RemoteAccess")
 			rra_status = getStatus(rra_info[:status])
@@ -99,12 +99,12 @@ class MetasploitModule < Msf::Post
 				print_good("	IP Routing is Enabled.")
 			end
 			
-			# Esto es para W2003 y XP
+			# Esto es para Windows Servers y XP
 			# print_status(cmd_exec("netsh routing ip nat install"))
 			# print_status(cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt02']}\" full"))
 			# print_status(cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt01']}\" private"))
 			
-			# Para Windows Vista y mayores se hace compartiendo conexión de red en las propiedades del adaptador.
+			# Para Windows Vista, 7, 8, 8.1 y 10 se hace compartiendo conexión de red en las propiedades del adaptador.
 			# De igual manera se hace con los TAP (VPN)
 			
 			
@@ -208,7 +208,7 @@ class MetasploitModule < Msf::Post
 			# print_status("Current user: #{session.sys.config.getuid}")
 			set_pivot()
 			create_route()
-			#para saber si las rutas son correctas
+			# para saber si las rutas son correctas
 			# print_status("windows: route -p add #{get_net(datastore['NET'])} mask #{get_netmask(datastore['NET'])} METRIC 1")
 			# print_status("linux: route add -net #{datastore['NET']} gw #{datastore['RHOST']}")
 		else
