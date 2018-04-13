@@ -209,7 +209,7 @@ class MetasploitModule < Msf::Post
 	
 	def get_interfaces ()
 		#
-		# Get a list of pivot interfaces 
+		# Get a list of pivot interfaces, no es muy elegante. Hay que buscar otra forma.
 		#
 		interfaces_dict = {}
 		case session.platform
