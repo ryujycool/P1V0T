@@ -100,6 +100,22 @@ class MetasploitModule < Msf::Post
 				print_good("	IP Routing is Enabled.")
 			end
 			
+			
+			###############################
+			#Bloque de versiones de windows
+			##################################
+			#ponemos a continuacion el codigo comun a todos 
+
+			#ponemos en cada bloque el codigo especifico a la version:
+			win_version = session.sys.config.sysinfo
+			if win_version['OS']=~ /Windows 8/ or  win_version['OS']=~ /Windows 7/ or  win_version['OS']=~ /Windows 10/
+			elsif win_version['OS']=~ /Windows 2003/ or win_version['OS']=~ /Windows XP/
+			elsif win_version['OS']=~ /Windows 2012/
+			else	
+			end
+			########Fin bloque############
+			
+			
 			# https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/cc732263(v=ws.11)#BKMK_cmd
 			# ¿Es Windows Vista, 7, 8, 8.1 o 10?
 			# 	Fin del módulo
