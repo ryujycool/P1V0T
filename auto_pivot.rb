@@ -258,7 +258,46 @@ class MetasploitModule < Msf::Post
 		end
 		return interfaces_dict
 	end
+	#funcion calculo numero de interfaces validas(excluye las loopback)
+	def num_ifaces()
+		iface=client.net.config.interfaces
+		count=0
+		iface.each do |i|
+			if not (i.mac_name =~ /Loopback/ or i.mac_name =~ /lo/)
+				count+=1
+			end
+		end
+		return count
+	end #def_ifaces
 	
+	#
+	#obtiene los parametros de la interface del pivot, ip de la interface,netmask y nombre, si no es recuperable retorna nulo
+	#
+	def gw_interface()
+		local_int=session.tunnel_local.split(":").first
+		#puts("ip local: #{local_int}")
+		remote_int=session.tunnel_peer.split(":").first
+		#puts("ip remota: #{remote_int}")
+		iface=client.net.config.interfaces
+		iface_data={}
+			iface.each do |i|
+				if not (i.mac_name =~ /Loopback/ or i.mac_name =~ /lo/)
+					netmask=i.netmasks[0].to_s
+					host= i.ip + "/" + netmask
+					eval_net = IPAddr.new(host)
+					#print_status("la net local a probar: #{host}")
+					#print_status("la interface local a probar: #{local_int}")
+					#print_status("la red local es: #{eval_net}")
+					local_host= IPAddr.new(local_int)
+					if eval_net.include?(local_host)
+						netmask=i.netmasks[0].to_s
+						return [remote_int,netmask,i.mac_name]
+						#[0=>ip_interface,1=>netmask_interface,2=>nombre_interfaz]
+					end
+				    end
+				end
+			return nil
+		end #end gw_interface
 	#
   	# funcion principal, donde se invocan los comandos necesarios segun la plataforma
   	#
