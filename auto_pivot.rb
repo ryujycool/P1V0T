@@ -279,7 +279,6 @@ class MetasploitModule < Msf::Post
 		remote_int=session.tunnel_peer.split(":").first
 		#puts("ip remota: #{remote_int}")
 		iface=client.net.config.interfaces
-		iface_data={}
 			iface.each do |i|
 				if not (i.mac_name =~ /Loopback/ or i.mac_name =~ /lo/)
 					netmask=i.netmasks[0].to_s
@@ -298,6 +297,41 @@ class MetasploitModule < Msf::Post
 				end
 			return nil
 		end #end gw_interface
+	
+	#
+	#obtiene los parametros de la r_net, ip de la interface remota,netmask, nombre y red, si no es recuperable retorna nulo
+	#	
+		def get_rnet()
+		if num_ifaces() <= 1
+			print_bad("no hay rnet que añadir")
+		elsif num_ifaces() > 2
+			print_bad("hay varias, añadir a mano la objetivo")
+		elsif num_ifaces() == 2
+			l_iface=gw_interface()[0]
+			print_status("linterfaces es: #{l_iface}")
+			r_iface=client.net.config.interfaces
+			r_iface.each do |i|
+				if not(i.mac_name =~ /Loopback/ or i.mac_name =~ /lo/)
+					if i.ip != l_iface
+						netmask=i.netmasks[0].to_s
+						iface= i.ip + "/" + netmask
+						eval_net = IPAddr.new(iface)
+						#print_status("rinterface es: #{i.ip}")
+						#print_status("r_net es: #{eval_net}")
+						return [i.ip,netmask,i.mac_name,eval_net.to_s]
+						#[0=>ip_interface,1=>netmask_interface,2=>nombre_interfaz,3=>red]
+					end
+				else
+					return nil
+
+				    end
+			end
+
+		else
+			return nil
+		end
+	end #end get_rnet
+	
 	#
   	# funcion principal, donde se invocan los comandos necesarios segun la plataforma
   	#
