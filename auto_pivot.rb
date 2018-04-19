@@ -236,28 +236,6 @@ class MetasploitModule < Msf::Post
 		end
 	end
 	
-	def get_interfaces ()
-		#
-		# Get a list of pivot interfaces, no es muy elegante. Hay que buscar otra forma.
-		#
-		interfaces_dict = {}
-		case session.platform
-		when 'windows'
-			interfaces = cmd_exec('ipconfig').split("\n")
-			counter = 0
-			interfaces.each do |interface|
-				if interface.include? "Ethernet"
-					if interfaces[counter + 4].include? "IPv4"
-						interfaces_dict[interface.gsub("\r","").gsub(" ","").gsub("adapter","").gsub("Adaptadorde","").gsub("Ethernet","").gsub(":","")] = interfaces[counter + 4].gsub(". ","").gsub("IPv4","").gsub("Address","").gsub("Dirección","").gsub(" ","").gsub(":","").gsub("\r","")
-					end
-				end
-				counter = counter + 1
-			end
-		when 'linux'
-			# comandos para linux
-		end
-		return interfaces_dict
-	end
 	#funcion calculo numero de interfaces validas(excluye las loopback)
 	def num_ifaces()
 		iface=client.net.config.interfaces
@@ -269,11 +247,29 @@ class MetasploitModule < Msf::Post
 		end
 		return count
 	end #def_ifaces
-	
+	#funcion que obtiene el nombre de la interfaz en windows
+	def get_if_name(ip)
+		system_ifaces = cmd_exec('ipconfig').split("\n")
+		adapter_name=[]#result[name of adapter]
+		system_ifaces.each do |x|
+			if x.include? "Ethernet"
+				adapter_name=x.split(":").first#save adapter name temporary to return later
+			elsif x.include? " IP" and x.include? ":"
+				ip_iface = x.split(": ")#cuts and obtain ip on line of output of comand
+				if_ip = ip_iface.last[0..-3]#ip in correct format eliminating 3 blank spaces at last
+				if if_ip == ip
+					#puts("#{adapter_name} ip: #{if_ip}")
+					return adapter_name
+				end
+			end
+		end
+	return nil
+	end #get_if_name
+
 	#
 	#obtiene los parametros de la interface del pivot, ip de la interface,netmask y nombre, si no es recuperable retorna nulo
 	#
-	def gw_interface()
+	def gw_interface() #return [remote_int,netmask,name_iface]
 		local_int=session.tunnel_local.split(":").first
 		#puts("ip local: #{local_int}")
 		remote_int=session.tunnel_peer.split(":").first
@@ -289,26 +285,32 @@ class MetasploitModule < Msf::Post
 					#print_status("la red local es: #{eval_net}")
 					local_host= IPAddr.new(local_int)
 					if eval_net.include?(local_host)
-						netmask=i.netmasks[0].to_s
-						return [remote_int,netmask,i.mac_name]
-						#[0=>ip_interface,1=>netmask_interface,2=>nombre_interfaz]
+						netmask=i.netmasks[0].to_s																				
+						remote_os=session.sys.config.sysinfo['OS']
+							if remote_os =~ /Linux/
+								return [i.ip,netmask,i.mac_name,eval_net.to_s]
+							elsif remote_os=~ /Windows/
+								if_name=get_if_name(i.ip)
+								return [i.ip,netmask,if_name,eval_net.to_s]
+							end
 					end
 				    end
-				end
-			return nil
-		end #end gw_interface
+			end
+		return nil
+	end #end bloque gw_interface
 	
 	#
 	#obtiene los parametros de la r_net, ip de la interface remota,netmask, nombre y red, si no es recuperable retorna nulo
 	#	
-		def get_rnet()
+	def get_rnet()
 		if num_ifaces() <= 1
 			print_bad("no hay rnet que añadir")
 		elsif num_ifaces() > 2
 			print_bad("hay varias, añadir a mano la objetivo")
 		elsif num_ifaces() == 2
+			#print_good("correcto")
 			l_iface=gw_interface()[0]
-			print_status("linterfaces es: #{l_iface}")
+			#print_status("linterfaces es: #{l_iface}")
 			r_iface=client.net.config.interfaces
 			r_iface.each do |i|
 				if not(i.mac_name =~ /Loopback/ or i.mac_name =~ /lo/)
@@ -318,20 +320,23 @@ class MetasploitModule < Msf::Post
 						eval_net = IPAddr.new(iface)
 						#print_status("rinterface es: #{i.ip}")
 						#print_status("r_net es: #{eval_net}")
-						return [i.ip,netmask,i.mac_name,eval_net.to_s]
-						#[0=>ip_interface,1=>netmask_interface,2=>nombre_interfaz,3=>red]
+						#print_status("index: #{i.pretty}")
+						#print_status("r_net es: #{eval_net}")
+						remote_os=session.sys.config.sysinfo['OS']
+							if remote_os =~ /Linux/
+								return [i.ip,netmask,i.mac_name,eval_net.to_s]
+							elsif remote_os=~ /Windows/
+								if_name=get_if_name(i.ip)
+								#print_good("este es el resultado#{if_name}")
+								return [i.ip,netmask,if_name,eval_net.to_s]
+							end
 					end
-				else
-					return nil
-
 				    end
 			end
-
-		else
-			return nil
 		end
+		return nil
 	end #end get_rnet
-	
+	####################################END_FUNCTIONS#####################################################
 	#
   	# funcion principal, donde se invocan los comandos necesarios segun la plataforma
   	#
