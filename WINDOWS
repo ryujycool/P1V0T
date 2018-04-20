@@ -1,22 +1,51 @@
-DOS O MAS TARJETAS DE RED (SE EXCLUYEN VPN's):
+De momento el proyecto funciona con pivoting simple:
 
-WINDOWS 7 x32(PRO,)/x64(PRO)
-WINDOWS XP x32
-WINDOWS 10 x64(PRO,)
-WINDOWS 2003 x32 (STANDARD,)
+Para Windoes XP y Windows 2003 funciona con netsh routing y activar/arrancar el servicio RRAS.
+Para los servers 2008 y 2012 hay que instalar el rol de routing y activar/arrancar el servicio RRAS.
+Para W7, 8 y 10 vamos a intentar hacerlo con PowerShell.
 
 CLAVE A MODIFICAR:
 HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\ Services\Tcpip\Parameters\IPEnableRouter -->1
-SERVICIO A HABILITAR:
-ESPAÑOL=ENRUTAMIENTO Y ACCESO REMOTO
-INGLES= ROUTING AND REMOTE ACCESS
-habilitar servicio e iniciar
+SERVICIO A HABILITAR Y ARRANCAR: RemoteAccess
 
 COMANDOS EN PIVOT:
 reg add "HKLM\SYSTEM\CurrentControlSet\services\Tcpip\Parameters" /f /v IPEnableRouter /t REG_DWORD /d 1
+
+[Para Windoes XP y Windows 2003 funciona con netsh routing y activar/arrancar el servicio RRAS.
+Para los servers 2008 y 2012 hay que instalar el rol de routing y activar/arrancar el servicio RRAS.
+Para W7, 8 y 10 vamos a intentar hacerlo con PowerShell.]
+
 sc config RemoteAccess start= auto [disable, demand, auto]
-net start RemoteAccess / net stop RemoteAccess
+net start RemoteAccess
 ------------------------------
-Con estos comandos me daba error de que no se pudo iniciar el servicio por estar deshabilitado:
-reg add "HKLM\SYSTEM\CurrentControlSet\services\RemoteAccess" /v Start /t REG_DWORD /d 2 /f [4 disabled, 2 automatic, 3 manual]
-reg add "HKLM\SYSTEM\CurrentControlSet\services\RemoteAccess" /v DelayedAutostart /t REG_DWORD /d 0 /f [1 enabled,0 disabled/interesa en 0]
+
+W7, W8 y W10 powershell solution
+
+# Register the HNetCfg library (once)
+regsvr32 hnetcfg.dll
+
+# Create a NetSharingManager object
+$m = New-Object -ComObject HNetCfg.HNetShare
+
+# List connections
+$m.EnumEveryConnection |% { $m.NetConnectionProps.Invoke($_) }
+
+# Find connection
+$c = $m.EnumEveryConnection |? { $m.NetConnectionProps.Invoke($_).Name -eq "Ethernet" }
+
+# Get sharing configuration
+$config = $m.INetSharingConfigurationForINetConnection.Invoke($c)
+
+# See if sharing is enabled
+Write-Output $config.SharingEnabled
+
+# See the role of connection in sharing
+# 0 - public, 1 - private
+# Only meaningful if SharingEnabled is True
+Write-Output $config.SharingType
+
+# Enable sharing (0 - public, 1 - private)
+$config.EnableSharing(0)
+
+# Disable sharing
+$config.DisableSharing()
