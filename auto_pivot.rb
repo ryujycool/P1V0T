@@ -98,8 +98,9 @@ class MetasploitModule < Msf::Post
 			if registry_setvaldata(key, "IPEnableRouter", "1", "REG_DWORD")
 				print_good("	IP Routing is Enabled.")
 			else
-				print_bad("  	There was an error set the IPEnableRouter value.")
+				print_bad("  	There was an error setting the IPEnableRouter value.")
 				# Exit.
+				abort("Aborting module...")
 			end
 			# else
 				# print_good("	IP Routing is Enabled.")
@@ -109,20 +110,22 @@ class MetasploitModule < Msf::Post
 			print_status("Operating System: #{win_version['OS']}")
 			if win_version['OS']=~ /Windows 2008/
 				if have_powershell?
-					print_status("Powershell is installed. Trying to install the services.")
-					# En SSOO de 64 bits hay que ejecutar powershell de 64 bits para que funcione, si la shell/meterpreter es para 32 bits no funciona porque no existe el módulo ServerManager. Habría que comprobarlo en un W2008, W2012 y W2016 de 32 bits.
+					print_status("Powershell is installed in #{win_version['OS']}. Trying to install the services.")
 					# Windows 2008
 					psh_exec("Import-Module ServerManager; Add-WindowsFeature NPAS-RRAS-Services")
 				else
-					print_status("Powershell is not installed. Trying to install from command line...")
+					print_status("Powershell is not installed in #{win_version['OS']}. Trying to install from command line...")
 					cmd_exec("c:\Windows\system32\ServerManagerCmd.exe -install NPAS-RRAS-Services")
 				end
 			elsif win_version['OS']=~ /Windows 2012/
 				if have_powershell?
-					print_status("Powershell is installed. Trying to install the services.")
-					print_status(psh_exec("Import-Module ServerManager; Add-WindowsFeature Routing"))
+					print_status("Powershell is installed in #{win_version['OS']}. Trying to install the services.")
+					# Hay que deshabilitar el firewall, se propone deshabilitarlo y habilitarlo.
+					# cmd_exec("netsh advfirewall set allprofiles state off")
+					psh_exec("Import-Module ServerManager; Add-WindowsFeature Routing")
+					# cmd_exec("netsh advfirewall set allprofiles state on")
 				else
-					print_bad("Powershell is not installed. For this windows version (#{win_version['OS']}) we can't continue the execution.")
+					print_bad("Powershell is not installed in #{win_version['OS']}. For this windows version (#{win_version['OS']}) we can't continue the execution.")
 				end
 			elsif win_version['OS']=~ /Windows 8/ or  win_version['OS']=~ /Windows 7/ or  win_version['OS']=~ /Windows 10/
 				print_bad("The system is not compatible with this module.")
@@ -145,8 +148,9 @@ class MetasploitModule < Msf::Post
 				if service_change_startup("RemoteAccess",2)
 					print_good("	RemoteAccess service enabled.")
 				else
-					print_bad("  	There was an error enabling RemoteAccess service.")l
+					print_bad("  	There was an error enabling RemoteAccess service.")
 					# Exit
+					abort("Aborting module...")
 				end
 				print_status("	Starting Routing and Remote Access service...")
 				if service_start("RemoteAccess")
@@ -154,11 +158,13 @@ class MetasploitModule < Msf::Post
 				else
 					print_bad("  	There was an error starting RemoteAccess service.")
 					# Exit
+					abort("Aborting module...")
 				end
 			end			
 			puts("")
 		else
 			print_bad("You have to be administrator in the pivot machine to execute this module.")
+			abort("Aborting module...")
 		end
 	end
 	
@@ -176,18 +182,19 @@ class MetasploitModule < Msf::Post
 	def check_rnet()
 		
 		
-		if get_cidr(datastore['NET']) == false
+		if get_cidr(datastore['NET']) == false or not((0..33).include?(get_cidr(datastore['NET']))) or not(Rex::Socket.is_ipv4?(get_net(datastore['NET'])))
 			print_bad("You need to provide IPv4 network in NET parameter. Example: 192.168.1.0/24")
 			return false
-		elsif not((0..33).include?(get_cidr(datastore['NET'])))
-			print_bad("You need to provide IPv4 network in NET parameter. Example: 192.168.1.0/24")
-			return false
-		elsif not(Rex::Socket.is_ipv4?(get_net(datastore['NET'])))
-			print_bad("You need to provide IPv4 network in NET parameter. Example: 192.168.1.0/24")
-			return false
-		else
-			return true
+		# elsif not((0..33).include?(get_cidr(datastore['NET'])))
+			# print_bad("You need to provide IPv4 network in NET parameter. Example: 192.168.1.0/24")
+			# return false
+		# elsif not(Rex::Socket.is_ipv4?(get_net(datastore['NET'])))
+			# print_bad("You need to provide IPv4 network in NET parameter. Example: 192.168.1.0/24")
+			# return false
+		# else
+			# return true
 		end
+		return true
 	end
 	
 	#
@@ -352,7 +359,7 @@ class MetasploitModule < Msf::Post
 			end
 			create_route()
 		else
-			print_bad("Aborting Module.")
+			print_bad("Aborting Module...")
 		end
 			
   	end
