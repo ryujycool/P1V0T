@@ -60,7 +60,7 @@ class MetasploitModule < Msf::Post
 		#
 		# Linux commands
 		#
-
+		
 	end
 	
 	#
@@ -93,7 +93,7 @@ class MetasploitModule < Msf::Post
 			win_version = session.sys.config.sysinfo['OS']
 			print_status("Operating System: #{win_version}")
 			print_status("Starting the proccess...")			
-						
+			
 			# Common to all windows versions
 			print_status("Enabling IP Router...")
 			
@@ -137,6 +137,8 @@ class MetasploitModule < Msf::Post
 					abort("Aborting module...")
 				end
 			elsif win_version=~ /Windows 8/ or  win_version['OS']=~ /Windows 7/ or  win_version['OS']=~ /Windows 10/
+				print_bad("The system #{win_version} is not compatible with this module. The compatible systems are: Windows XP, Windows Server 2003, Windows Server 2008, windows Server 2012 and Windows Server 2016.")
+			else
 				print_bad("The system #{win_version} is not compatible with this module. The compatible systems are: Windows XP, Windows Server 2003, Windows Server 2008, windows Server 2012 and Windows Server 2016.")
 			end
 			
