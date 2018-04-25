@@ -113,22 +113,47 @@ class MetasploitModule < Msf::Post
 				if have_powershell?
 					rol_status = psh_exec("Import-Module ServerManager; Get-WindowsFeature | findstr 'NPAS-RRAS-Services' | findstr '[X'")
 					if rol_status == ""
-						print_status("Powershell is installed in #{win_version['OS']}. Trying to install the services.")
-						# Windows 2008
-						psh_exec("Import-Module ServerManager; Add-WindowsFeature NPAS-RRAS-Services")
+						print_status("It's necessary install Routing and Remote Access rol in the server. Do you want to continue?(N/y)")
+						continue = gets.chomp
+						continue = continue.gsub("\n","")
+						while not ['y','Y','n','N'].include? continue
+							print_status("Please, enter Y or N.")
+							continue = gets.chomp
+							continue = continue.gsub("\n","")
+						end
+						if ['y','Y'].include? continue
+							print_status("Powershell is installed in #{win_version['OS']}. Trying to install the Routing and Remote Access rol.")
+							# Windows 2008
+							psh_exec("Import-Module ServerManager; Add-WindowsFeature NPAS-RRAS-Services")
+						else
+							abort("Aborting module...")
+						end
 					else
-						print_status("The services are installed. It's not necessary to install them")
+						print_status("The necessary rols are installed. It's not necessary to install them")
 					end
 				else
-					print_status("Powershell is not installed in #{win_version['OS']}. Trying to install from command line...")
+					# Aunque hay muy pocas probabilidades de que entre aquí, hay que comprobar mediante linea de comando si está instalado o no
+					print_status("Powershell is not installed in #{win_version['OS']}. Trying to install the Routing and Remote Access rol from command line...")
 					cmd_exec("c:\Windows\system32\ServerManagerCmd.exe -install NPAS-RRAS-Services")
 				end
 			elsif win_version=~ /Windows 2012/
 				if have_powershell?
 					rol_status = psh_exec("Import-Module ServerManager; Get-WindowsFeature | findstr 'Routing' | findstr '[X'")
 					if not rol_status.include? "Installed"
-						print_status("Powershell is installed in #{win_version}. Trying to install the services.")
-						psh_exec("Import-Module ServerManager; Add-WindowsFeature Routing")
+						print_status("It's necessary install Routing and Remote Access rol in the server. Do you want to continue?(N/y)")
+						continue = gets.chomp
+						continue = continue.gsub("\n","")
+						while not ['y','Y','n','N'].include? continue
+							print_status("Please, enter Y or N.")
+							continue = gets.chomp
+							continue = continue.gsub("\n","")
+						end
+						if ['y','Y'].include? continue
+							print_status("Powershell is installed in #{win_version}. Trying to install the services.")
+							psh_exec("Import-Module ServerManager; Add-WindowsFeature Routing")
+						else
+							abort("Aborting module...")
+						end
 					else
 						print_status("The services are installed. It's not necessary to install them")
 					end
@@ -359,7 +384,14 @@ class MetasploitModule < Msf::Post
   	# MAIN PROGRAM
   	#
 	def run
-
+		begin
+			print_status("Prueba..")
+			exit(false)
+		rescue SystemExit => e		
+			print_status("Salimos..")
+		end
+		puts("el programa debio terminar.")
+		exit(true)
 		if check_rnet()
 			case session.platform
 			when 'linux'
