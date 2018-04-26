@@ -384,14 +384,6 @@ class MetasploitModule < Msf::Post
   	# MAIN PROGRAM
   	#
 	def run
-		begin
-			print_status("Prueba..")
-			exit(false)
-		rescue SystemExit => e		
-			print_status("Salimos..")
-		end
-		puts("el programa debio terminar.")
-		exit(true)
 		if check_rnet()
 			case session.platform
 			when 'linux'
