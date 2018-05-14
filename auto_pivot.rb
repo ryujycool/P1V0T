@@ -33,8 +33,8 @@ class MetasploitModule < Msf::Post
 		# OptBool.new( 'SYSTEMINFO', [ true, 'True if you want to get system info', 'TRUE' ])
 		OptAddressRange.new('NET',    [true, 'The network we want to arrive (Example: 10.0.0.0/24)']),
 		OptAddress.new('RHOST',    [true, 'IP address of pivot computer (our side IP)']),
-		OptString.new('NInt01', [true, 'Name of pivot network adapter of our network. Explample: "eth0", "Ethernet 2"...']),
-		OptString.new('NInt02', [true, 'Name of pivot network adapter of the other network. Explample: "eth1", "Ethernet", "tap0"...']),
+		OptString.new('NInt01', [false, 'Name of pivot network adapter of our network. Explample: "eth0", "Ethernet 2"...']),
+		OptString.new('NInt02', [false, 'Name of pivot network adapter of the other network. Explample: "eth1", "Ethernet", "tap0"...']),
       ])
   end
   
@@ -300,26 +300,7 @@ class MetasploitModule < Msf::Post
 			abort("Aborting module...")
 		end
 	end
-	
-	#
-	# cidr to netmask function
-	#
-	def get_netmask(eval_net)
-		cidr= eval_net.split("/").last
-		return IPAddr.new('255.255.255.255').mask(cidr).to_s
-	end
-	
-	#
-	# check the format of parameter NET
-	#
-	def check_rnet()
-		if get_cidr(datastore['NET']) == false or not((0..33).include?(get_cidr(datastore['NET']))) or not(Rex::Socket.is_ipv4?(get_net(datastore['NET'])))
-			print_bad("You need to provide IPv4 network in NET parameter. Example: 192.168.1.0/24")
-			return false
-		end
-		return true
-	end
-	
+
 	#
 	# Get network
 	#
@@ -342,6 +323,25 @@ class MetasploitModule < Msf::Post
 			end
 		end
 		return false
+	end
+
+	#
+	# cidr to netmask function
+	#
+	def get_netmask(eval_net)
+		cidr= eval_net.split("/").last
+		return IPAddr.new('255.255.255.255').mask(cidr).to_s
+	end
+	
+	#
+	# check the format of parameter NET
+	#
+	def check_rnet()
+		if get_cidr(datastore['NET']) == false or not((0..33).include?(get_cidr(datastore['NET']))) or not(Rex::Socket.is_ipv4?(get_net(datastore['NET'])))
+			print_bad("You need to provide IPv4 network in NET parameter. Example: 192.168.1.0/24")
+			return false
+		end
+		return true
 	end
 	
 	#
@@ -368,33 +368,61 @@ class MetasploitModule < Msf::Post
 	end
 	
 	#
-	# Get the number of interfaces, except loopback
+	# Get valid ifaces on objective and returns array of them
 	#
-	def num_ifaces()
+	def valid_ifaces()#resultado array multidimensional [ipv4,nombre_int_fisica,netmask,nombre_interfaz]
+		ifaces=[]
+		index=0
 		iface=client.net.config.interfaces
 		count=0
+		remote_os=session.sys.config.sysinfo['OS']
 		iface.each do |i|
-			if not (i.mac_name =~ /Loopback/ or i.mac_name =~ /lo/)
-				count+=1
+			i.addrs.length.times do |y|
+				if not (i.mac_name =~ /Loopback/ or i.mac_name =~ /lo/ )
+					if i.addrs[y] =~ /\b[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\b/
+						count+=1
+
+						if remote_os =~ /Linux/
+							ifaces[index]=[i.addrs[y],i.netmasks[y],i.mac_name.gsub("\xA0","á").gsub("\xA2","ó").gsub("\xF3","ó"),i.mac_name.gsub("\xA0","á").gsub("\xA2","ó").gsub("\xF3","ó")]
+							index+=1
+						elsif remote_os=~ /Windows/
+							ifaces[index]=[i.addrs[y],i.netmasks[y],i.mac_name.gsub("\xA0","á").gsub("\xA2","ó").gsub("\xF3","ó"),get_if_name(i.addrs[y])]#testar ultimo parametro
+							print_status("array: #{ifaces[index][2]}")
+							print_status("array1 original: #{ifaces.length}")
+							index+=1
+						else
+							return nil
+						end
+
+					end
+				end
 			end
 		end
-		return count
+		print_status("total valid ifaces: #{ifaces.length}")
+		return ifaces
 	end
 	
 	#
 	# Get interfaces name on windows
 	#
-	def get_if_name(ip)
-		system_ifaces = cmd_exec('ipconfig').split("\n")
+	def get_if_name(ip)#obtain ifname on windows platform
+		system_ifaces = cmd_exec('ipconfig').gsub("\r","").split("\n")
+		#print_status("interfaces sistema: #{system_ifaces}")
 		adapter_name=[]
 		system_ifaces.each do |x|
+			#print_status("valorx: #{x}")
 			if x.include? "Ethernet"
 				adapter_name=x.split(":").first
-			elsif x.include? " IP" and x.include? ":"
+				#print_status("nombre adaptador: #{adapter_name}")
+			elsif (x.include? " IP" and x.include? ":") and not(x.include? "IPv6")#obtain ipv4 only
 				ip_iface = x.split(": ")
-				if_ip = ip_iface.last[0..-3]
+				#print_status("valoripface: #{ip_iface}")
+				if_ip = ip_iface.last
+				#print_status("valorif_ip: #{if_ip}")
 				if if_ip == ip
-					return adapter_name
+					#print_good("encontrada")
+					#print_good("#{adapter_name.gsub("\xA0","á").gsub("\xA2","ó")}")
+					return adapter_name.gsub("\xA0","á").gsub("\xA2","ó")
 				end
 			end
 		end
@@ -402,68 +430,50 @@ class MetasploitModule < Msf::Post
 	end
 
 	#
-	# Get pivot interface name, IPobtiene los parametros de la interface del pivot, ip de la interface,netmask y nombre, si no es recuperable retorna nulo
+	# obtains all data to use in every command return hash{rif_in{ip,netmask,name_of_card,network},rif_out{ip,netmask,name_of_card,network},local_if{ip}}
 	#
-	def gw_interface() #return [remote_int,netmask,name_iface]
-		local_int=session.tunnel_local.split(":").first
-		# puts("ip local: #{local_int}")
-		remote_int=session.tunnel_peer.split(":").first
-		# puts("ip remota: #{remote_int}")
-		iface=client.net.config.interfaces
-		iface.each do |i|
-			if not (i.mac_name =~ /Loopback/ or i.mac_name =~ /lo/)
-				puts(i.mac_name)
-				netmask=i.netmasks[0].to_s
-				host= i.ip + "/" + netmask
-				eval_net = IPAddr.new(host)
-				# print_status("la net local a probar: #{host}")
-				# print_status("la interface local a probar: #{local_int}")
-				local_host= IPAddr.new(local_int)
-				if eval_net.include?(local_host)
-					netmask=i.netmasks[0].to_s																				
-					remote_os=session.sys.config.sysinfo['OS']
-					if remote_os =~ /Linux/
-						return [i.ip,netmask,i.mac_name,eval_net.to_s]
-					elsif remote_os=~ /Windows/
-						if_name=get_if_name(i.ip)
-						return [i.ip,netmask,if_name,eval_net.to_s]
+
+	def rhost_data() #return [if_in_ip,netmask_if_in,l_network,RifIN,if_out_ip,name_iface,r_network,RifOUT]
+
+		rif_in={}
+		rif_out={}
+		local_if={}
+		local_if[:ip]= session.tunnel_local.split(":").first #local ip of redbox
+		rif_in[:ip] = session.tunnel_peer.split(":").first #ip of connected objective
+		ifaces=valid_ifaces()#obtenemos el array para parsear las interfaces validas
+		print_good("largo array: #{ifaces.length}")
+		
+				ifaces.each do |x|
+					#print_good("test de array: #{x}")
+					#print_good("test de array final: #{x[0]}")
+					if rif_in[:ip] == x[0]
+						rif_in[:netmask] = x[1]
+						rif_in[:name] = x[3]
+						rif_in[:network]=IPAddr.new(rif_in[:ip] + "/" + rif_in[:netmask]).to_s
+						print_status("detected ip rfin:#{rif_in[:ip]} ")
+						print_status("detected netmask rfin:#{rif_in[:netmask]} ")
+						print_status("detected name interfaz rfin:#{rif_in[:name]} ")
+						print_status("detected network rfin:#{rif_in[:network]} ")
+					else 
+						rif_out[:ip] = x[0]
+						rif_out[:netmask] = x[1]
+						rif_out[:name] = x[3]
+						rif_out[:network]=IPAddr.new(rif_out[:ip] + "/" + rif_out[:netmask]).to_s
+						print_status("detected ip rifout:#{rif_out[:ip]} ")
+						print_status("detected netmask rifout:#{rif_out[:netmask]} ")
+						print_status("detected name rifout:#{rif_out[:name]} ")
+						print_status("detected network rifout:#{rif_out[:network]} ")
 					end
 				end
-			end
-		end
-		return nil
+		final_hash={}
+		final_hash[:rif_in]=rif_in
+		final_hash[:rif_out]=rif_out
+		final_hash[:local_if]=local_if
+		return final_hash
+
+
 	end 
-	
-	#
-	# obtiene los parametros de la r_net, ip de la interface remota,netmask, nombre y red, si no es recuperable retorna nulo
-	#	
-	def get_rnet()
-		if num_ifaces() <= 1
-			print_bad("There are not enough interfaces to establish the route.")
-		elsif num_ifaces() > 2
-			print_bad("There are too many interfaces, add them manualy.")
-		elsif num_ifaces() == 2
-			l_iface=gw_interface()[0]
-			r_iface=client.net.config.interfaces
-			r_iface.each do |i|
-				if not(i.mac_name =~ /Loopback/ or i.mac_name =~ /lo/)
-					if i.ip != l_iface
-						netmask=i.netmasks[0].to_s
-						iface= i.ip + "/" + netmask
-						eval_net = IPAddr.new(iface)
-						remote_os=session.sys.config.sysinfo['OS']
-							if remote_os =~ /Linux/
-								return [i.ip,netmask,i.mac_name,eval_net.to_s]
-							elsif remote_os=~ /Windows/
-								if_name=get_if_name(i.ip)
-								return [i.ip,netmask,if_name,eval_net.to_s]
-							end
-					end
-				 end
-			end
-		end
-		return nil
-	end 
+
 	
 	######################################################################################################
 	####################################END_FUNCTIONS#####################################################
@@ -477,11 +487,24 @@ class MetasploitModule < Msf::Post
 		if check_rnet()
 			case session.platform
 			when 'linux'
-				linux_pivot()
+				print_status("comandos para linux")
 			when 'windows'
-				windows_pivot()
+				print_status("comandos para windows")
+				testar= rhost_data()#resultado en formato hash de la funcion que obtiene todos los datos del rhost
+				print_bad("prueba de fuego")
+				print_good("final hash:#{testar[:rif_in][:ip]} ")
+				print_good("final hash:#{testar[:rif_in][:network]} ")
+				print_good("final hash:#{testar[:rif_in][:netmask]} ")
+				print_good("final hash:#{testar[:rif_in][:name]} ")
+				print_good("final hash:#{testar[:rif_in][:ip]} ")
+				print_good("final hash:#{testar[:rif_in][:network]} ")
+				print_good("final hash:#{testar[:rif_in][:netmask]} ")
+				print_good("final hash:#{testar[:rif_in][:name]} ")
+				
+
+
 			end
-			create_route()
+
 		else
 			print_bad("Aborting Module...")
 		end
