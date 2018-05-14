@@ -32,10 +32,10 @@ class MetasploitModule < Msf::Post
     register_options(
       [
 		# OptBool.new( 'SYSTEMINFO', [ true, 'True if you want to get system info', 'TRUE' ])
-		OptAddressRange.new('NET',    [true, 'The network we want to arrive (Example: 10.0.0.0/24)']),
-		OptAddress.new('RHOST',    [true, 'IP address of pivot computer (our side IP)']),
-		OptString.new('NInt01', [false, 'Name of pivot network adapter of our network. Explample: "eth0", "Ethernet 2"...']),
-		OptString.new('NInt02', [false, 'Name of pivot network adapter of the other network. Explample: "eth1", "Ethernet", "tap0"...']),
+		OptAddressRange.new('RNET',    [false, 'The network we want to arrive (Example: 10.0.0.0/24)']),
+		OptAddress.new('RIFGW',    [false, 'IP address of nic of rhost that incomes our data (our side IP)']),
+		OptString.new('NIFIN', [false, 'Name interface adapter on rhost that are connected in same lhost network. Explample: "eth0", "Ethernet 2"...']),
+		OptString.new('NIFOUT', [false, 'Name interface adapter on rhost that are connected in to objetive network. Explample: "eth1", "Ethernet", "tap0"...']),
       ])
   end
   
@@ -44,7 +44,7 @@ class MetasploitModule < Msf::Post
 	########################################################################################################
 	
 	#
-	# Get OS of PIVOT
+	# Get OS of kali redbox
 	#
 	def sistema_base?
 		if (Msf::Config.local_directory[0,1])==("/")
@@ -382,11 +382,13 @@ class MetasploitModule < Msf::Post
 				if not (i.mac_name =~ /Loopback/ or i.mac_name =~ /lo/ )
 					if i.addrs[y] =~ /\b[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\b/
 						count+=1
+
 						if remote_os =~ /Linux/
-							ifaces[index]=[i.addrs[y],i.netmasks[y],i.mac_name.gsub("\xA0","á").gsub("\xA2","ó").gsub("\xF3","ó"),i.mac_name.gsub("\xA0","á").gsub("\xA2","ó").gsub("\xF3","ó")]
+							if_name=i.mac_name.gsub("\xA0","á").gsub("\xA2","ó").gsub("\xF3","ó")
+							ifaces[index]=[i.addrs[y],i.netmasks[y],if_name,if_name]
 							index+=1
 						elsif remote_os=~ /Windows/
-							ifaces[index]=[i.addrs[y],i.netmasks[y],i.mac_name.gsub("\xA0","á").gsub("\xA2","ó").gsub("\xF3","ó"),get_if_name(i.addrs[y])]
+							ifaces[index]=[i.addrs[y],i.netmasks[y],i.mac_name.gsub("\xA0","á").gsub("\xA2","ó").gsub("\xF3","ó"),get_if_name(i.addrs[y])]#testar ultimo parametro
 							index+=1
 						else
 							return nil
@@ -462,7 +464,7 @@ class MetasploitModule < Msf::Post
   	# MAIN PROGRAM
   	#
 	def run
-		total_ifaces=3
+		total_ifaces=valid_ifaces().length
 		if total_ifaces == 2
 			print_good("Detected two valid interfaces. Begin of operations...")
 		elsif total_ifaces == 1
@@ -475,6 +477,15 @@ class MetasploitModule < Msf::Post
 			case session.platform
 			when 'linux'
 				print_status("comandos para linux")
+				testar= rhost_data()#resultado en formato hash de la funcion que obtiene todos los datos del rhost
+				print_good("final hash ip rif:#{testar[:rif_in][:ip]} ")
+				print_good("final hash network rif:#{testar[:rif_in][:network]} ")
+				print_good("final hash netmask rif:#{testar[:rif_in][:netmask]} ")
+				print_good("final hash nombre nic rif:#{testar[:rif_in][:name]} ")
+				print_good("final hash ip rifout:#{testar[:rif_out][:ip]} ")
+				print_good("final hash network rifout:#{testar[:rif_out][:network]} ")
+				print_good("final hash netmask rifout:#{testar[:rif_out][:netmask]} ")
+				print_good("final hash nombre nic:#{testar[:rif_out][:name]} ")
 			when 'windows'
 				print_status("comandos para windows")
 				testar= rhost_data()#resultado en formato hash de la funcion que obtiene todos los datos del rhost
