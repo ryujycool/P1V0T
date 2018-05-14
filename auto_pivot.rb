@@ -1,3 +1,4 @@
+
 ##
 # This module requires Metasploit: https://metasploit.com/download
 # Current source: https://github.com/rapid7/metasploit-framework
@@ -381,14 +382,11 @@ class MetasploitModule < Msf::Post
 				if not (i.mac_name =~ /Loopback/ or i.mac_name =~ /lo/ )
 					if i.addrs[y] =~ /\b[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\b/
 						count+=1
-
 						if remote_os =~ /Linux/
 							ifaces[index]=[i.addrs[y],i.netmasks[y],i.mac_name.gsub("\xA0","á").gsub("\xA2","ó").gsub("\xF3","ó"),i.mac_name.gsub("\xA0","á").gsub("\xA2","ó").gsub("\xF3","ó")]
 							index+=1
 						elsif remote_os=~ /Windows/
-							ifaces[index]=[i.addrs[y],i.netmasks[y],i.mac_name.gsub("\xA0","á").gsub("\xA2","ó").gsub("\xF3","ó"),get_if_name(i.addrs[y])]#testar ultimo parametro
-							print_status("array: #{ifaces[index][2]}")
-							print_status("array1 original: #{ifaces.length}")
+							ifaces[index]=[i.addrs[y],i.netmasks[y],i.mac_name.gsub("\xA0","á").gsub("\xA2","ó").gsub("\xF3","ó"),get_if_name(i.addrs[y])]
 							index+=1
 						else
 							return nil
@@ -398,7 +396,6 @@ class MetasploitModule < Msf::Post
 				end
 			end
 		end
-		print_status("total valid ifaces: #{ifaces.length}")
 		return ifaces
 	end
 	
@@ -407,21 +404,14 @@ class MetasploitModule < Msf::Post
 	#
 	def get_if_name(ip)#obtain ifname on windows platform
 		system_ifaces = cmd_exec('ipconfig').gsub("\r","").split("\n")
-		#print_status("interfaces sistema: #{system_ifaces}")
 		adapter_name=[]
 		system_ifaces.each do |x|
-			#print_status("valorx: #{x}")
 			if x.include? "Ethernet"
 				adapter_name=x.split(":").first
-				#print_status("nombre adaptador: #{adapter_name}")
 			elsif (x.include? " IP" and x.include? ":") and not(x.include? "IPv6")#obtain ipv4 only
 				ip_iface = x.split(": ")
-				#print_status("valoripface: #{ip_iface}")
 				if_ip = ip_iface.last
-				#print_status("valorif_ip: #{if_ip}")
 				if if_ip == ip
-					#print_good("encontrada")
-					#print_good("#{adapter_name.gsub("\xA0","á").gsub("\xA2","ó")}")
 					return adapter_name.gsub("\xA0","á").gsub("\xA2","ó")
 				end
 			end
@@ -441,28 +431,17 @@ class MetasploitModule < Msf::Post
 		local_if[:ip]= session.tunnel_local.split(":").first #local ip of redbox
 		rif_in[:ip] = session.tunnel_peer.split(":").first #ip of connected objective
 		ifaces=valid_ifaces()#obtenemos el array para parsear las interfaces validas
-		print_good("largo array: #{ifaces.length}")
-		
+
 				ifaces.each do |x|
-					#print_good("test de array: #{x}")
-					#print_good("test de array final: #{x[0]}")
 					if rif_in[:ip] == x[0]
 						rif_in[:netmask] = x[1]
 						rif_in[:name] = x[3]
 						rif_in[:network]=IPAddr.new(rif_in[:ip] + "/" + rif_in[:netmask]).to_s
-						print_status("detected ip rfin:#{rif_in[:ip]} ")
-						print_status("detected netmask rfin:#{rif_in[:netmask]} ")
-						print_status("detected name interfaz rfin:#{rif_in[:name]} ")
-						print_status("detected network rfin:#{rif_in[:network]} ")
 					else 
 						rif_out[:ip] = x[0]
 						rif_out[:netmask] = x[1]
 						rif_out[:name] = x[3]
 						rif_out[:network]=IPAddr.new(rif_out[:ip] + "/" + rif_out[:netmask]).to_s
-						print_status("detected ip rifout:#{rif_out[:ip]} ")
-						print_status("detected netmask rifout:#{rif_out[:netmask]} ")
-						print_status("detected name rifout:#{rif_out[:name]} ")
-						print_status("detected network rifout:#{rif_out[:network]} ")
 					end
 				end
 		final_hash={}
@@ -483,26 +462,31 @@ class MetasploitModule < Msf::Post
   	# MAIN PROGRAM
   	#
 	def run
+		total_ifaces=3
+		if total_ifaces == 2
+			print_good("Detected two valid interfaces. Begin of operations...")
+		elsif total_ifaces == 1
+			print_bad("Only one interface detected. No operations to do. ")#pendiente invocar error para detener ejecucion
+		elsif total_ifaces > 2
+			print_bad("Too many interfaces detected. Set it manually. ")#pendiente invocar error para detener ejecucion
+		end
 
-		if check_rnet()
+		if check_rnet() and total_ifaces == 2
 			case session.platform
 			when 'linux'
 				print_status("comandos para linux")
 			when 'windows'
 				print_status("comandos para windows")
 				testar= rhost_data()#resultado en formato hash de la funcion que obtiene todos los datos del rhost
-				print_bad("prueba de fuego")
-				print_good("final hash:#{testar[:rif_in][:ip]} ")
-				print_good("final hash:#{testar[:rif_in][:network]} ")
-				print_good("final hash:#{testar[:rif_in][:netmask]} ")
-				print_good("final hash:#{testar[:rif_in][:name]} ")
-				print_good("final hash:#{testar[:rif_in][:ip]} ")
-				print_good("final hash:#{testar[:rif_in][:network]} ")
-				print_good("final hash:#{testar[:rif_in][:netmask]} ")
-				print_good("final hash:#{testar[:rif_in][:name]} ")
+				print_good("final hash ip rif:#{testar[:rif_in][:ip]} ")
+				print_good("final hash network rif:#{testar[:rif_in][:network]} ")
+				print_good("final hash netmask rif:#{testar[:rif_in][:netmask]} ")
+				print_good("final hash nombre nic rif:#{testar[:rif_in][:name]} ")
+				print_good("final hash ip rifout:#{testar[:rif_out][:ip]} ")
+				print_good("final hash network rifout:#{testar[:rif_out][:network]} ")
+				print_good("final hash netmask rifout:#{testar[:rif_out][:netmask]} ")
+				print_good("final hash nombre nic:#{testar[:rif_out][:name]} ")
 				
-
-
 			end
 
 		else
