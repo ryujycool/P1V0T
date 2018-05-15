@@ -240,7 +240,7 @@ class MetasploitModule < Msf::Post
 					print_status("Powershell is not installed in #{win_version['OS']}. Trying to install the Routing and Remote Access rol from command line...")
 					cmd_exec("c:\Windows\system32\ServerManagerCmd.exe -install NPAS-RRAS-Services")
 				end
-			elsif win_version=~ /Windows 2012/
+			elsif win_version=~ /Windows 2012/ or win_version=~ /Windows 2016/
 				if have_powershell?
 					rol_status = psh_exec("Import-Module ServerManager; Get-WindowsFeature | findstr 'Routing' | findstr '[X'")
 					if not rol_status.include? "Installed"
@@ -284,7 +284,7 @@ class MetasploitModule < Msf::Post
 			if rra_status == 'Started'
 				print_good("The service is enabled. It's not necessary to start it.")
 			else
-				if win_version=~ /Windows 2012/
+				if win_version=~ /Windows 2012/ or win_version=~ /Windows 2016/
 					cmd_exec ("sc config RemoteAccess start= auto")
 					print_status("Starting Routing and Remote Access service...")
 					cmd_exec("net start RemoteAccess")
